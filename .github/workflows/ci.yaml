@@ -58,7 +58,7 @@ jobs:
       - name: Build and push Backend image
         uses: docker/build-push-action@v6
         with:
-          context: .
+          context: ./apps/backend
           file: ./apps/backend/Dockerfile
           push: true
           # 소문자로 변환된 레포지토리 이름을 사용하여 태그 생성
