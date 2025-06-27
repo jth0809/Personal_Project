@@ -25,18 +25,6 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@v44 # 유명한 변경 감지 액션
 
-      # 2. 각 앱의 폴더에 변경이 있었는지 확인합니다.
-      - name: Check for changes in app path
-        id: check_changes
-        run: |
-          # 현재 매트릭스의 앱 폴더(apps/${{ matrix.app }})나 공용 packages 폴더에 변경이 있는지 확인
-          if (echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -q "apps/${{ matrix.app }}/") || \
-             (echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -q "packages/"); then
-            echo "changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
-          fi
-          
       # 3. 변경이 있을 때만 아래 단계를 실행합니다.
       - name: Set up Docker Buildx
         if: steps.check_changes.outputs.changed == 'true'
