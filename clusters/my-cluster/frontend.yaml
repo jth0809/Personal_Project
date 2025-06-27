@@ -1,0 +1,44 @@
+# clusters/my-cluster/frontend.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: default
+spec:
+  replicas: 2 # 안정성을 위해 2개의 Pod 실행
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          # 🚨 중요: GitHub Actions가 빌드한 이미지 주소를 정확히 기입합니다.
+          image: ghcr.io/jth0809/personal_project/frontend:latest
+          ports:
+            - containerPort: 3000
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "2000m"
+              memory: "2048Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-svc # 서비스 이름
+  namespace: default
+spec:
+  type: ClusterIP # 클러스터 내부에서만 접근 가능한 타입
+  selector:
+    app: frontend # app=frontend 라벨을 가진 Pod들에게 트래픽 전달
+  ports:
+    - protocol: TCP
+      port: 80 # 이 서비스는 80번 포트로 접근
+      targetPort: 3000 # Pod의 3000번 포트로 트래픽 전달
