@@ -15,6 +15,8 @@ COPY settings.gradle .
 # 소스코드 복사
 COPY src ./src
 
+RUN chmod +x ./gradlew
+
 # Gradle 빌드 실행. --no-daemon 옵션은 CI 환경에서 권장됩니다.
 # build가 성공하면 build/libs/ 에 .jar 파일이 생성됩니다.
 RUN ./gradlew build -x test --no-daemon
