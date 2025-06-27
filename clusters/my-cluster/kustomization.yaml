@@ -5,5 +5,5 @@ resources:
   - frontend.yaml
   - ingress.yaml
   # 만약 Ingress Controller도 GitOps로 관리한다면 아래 파일들도 포함
-  # - ingress-nginx-repo.yaml
-  # - ingress-nginx-release.yaml
+  - ingress-nginx-repo.yaml
+  - ingress-nginx-release.yaml

@@ -1,0 +1,12 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  # 이 이름이 HelmRelease에서 참조됩니다.
+  name: ingress-nginx
+  # FluxCD 관련 리소스는 보통 flux-system 네임스페이스에 만듭니다.
+  namespace: flux-system
+spec:
+  # 1시간마다 이 레포지토리에 새로운 차트 버전이 있는지 확인합니다.
+  interval: 1h
+  # Ingress-Nginx 공식 Helm 차트 레포지토리 주소입니다.
+  url: https://kubernetes.github.io/ingress-nginx
