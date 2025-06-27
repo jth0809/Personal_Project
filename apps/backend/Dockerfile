@@ -12,6 +12,8 @@ COPY gradlew .
 COPY build.gradle .
 COPY settings.gradle .
 
+COPY gradle ./gradle
+
 # 소스코드 복사
 COPY src ./src
 
