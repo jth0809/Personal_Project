@@ -2,7 +2,7 @@
 # Stage 1: 의존성 설치 (Dependency Installation)
 #   - CI/CD 환경에 최적화된 'npm ci'를 사용하여 안정적으로 패키지를 설치합니다.
 # =================================================================
-FROM node:alpine AS dependencies
+FROM node:lts-slim AS dependencies
 
 # 알파인 리눅스에서 필요한 라이브러리 설치
 RUN apk add --no-cache libc6-compat
@@ -38,7 +38,7 @@ RUN npm run build --workspace=frontend
 # Stage 3: 최종 실행 이미지 (Final Production Image)
 #   - 실제 서비스를 실행할 최소한의 파일만 포함하여 가볍고 안전한 이미지를 만듭니다.
 # =================================================================
-FROM node:alpine AS runner
+FROM node:lts-slim AS runner
 
 WORKDIR /app
 
