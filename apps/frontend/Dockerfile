@@ -16,7 +16,7 @@ COPY ../../turbo.json ./
 COPY ./package.json ./
 
 # 의존성 설치
-RUN pnpm install --frozen-lockfile
+RUN npm install --frozen-lockfile
 
 
 # =========================================
