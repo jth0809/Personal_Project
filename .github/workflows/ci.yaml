@@ -1,25 +1,55 @@
-# .github/workflows/ci.yaml
-
-name: CI - Build and Push Docker Images
+name: CI - Build and Push Changed Docker Images
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
     branches:
       - main
 
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    
+    # GHCR에 푸시할 수 있도록 권한을 부여합니다.
     permissions:
       contents: read
       packages: write
+    
+    # 빌드할 앱 목록을 매트릭스로 정의합니다.
+    strategy:
+      matrix:
+        app: [frontend, backend]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        # 변경 감지를 위해 전체 git 히스토리를 가져옵니다.
+        with:
+          fetch-depth: 0
 
+      # 1. 변경된 파일 목록을 가져옵니다.
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v44
+
+      # 2. 각 앱의 경로에 변경이 있었는지 확인합니다.
+      - name: Check for changes in app path
+        id: check_changes
+        run: |
+          # 현재 매트릭스의 앱 폴더(apps/${{ matrix.app }})나 공용 packages 폴더에 변경이 있는지 확인
+          if (echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -q "apps/${{ matrix.app }}/") || \
+             (echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -q "packages/"); then
+            echo "Changes detected in ${{ matrix.app }} or shared packages. Proceeding to build."
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "No changes detected in ${{ matrix.app }} or shared packages. Skipping build."
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+          
+      # 3. 변경이 있을 때만 아래 단계를 실행합니다.
       - name: Log in to GHCR
+        if: steps.check_changes.outputs.changed == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -27,40 +57,26 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Lowercase repository name
+        if: steps.check_changes.outputs.changed == 'true'
         id: string-utils
         uses: ASzc/change-string-case-action@v6
         with:
           string: ${{ github.repository }}
 
-      # QEMU 설정 (다른 아키텍처의 이미지를 빌드하기 위해 필요)
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
       - name: Set up Docker Buildx
+        if: steps.check_changes.outputs.changed == 'true'
         uses: docker/setup-buildx-action@v3
 
-      # --- 프론트엔드 이미지 빌드 및 푸시 ---
-      - name: Build and push Frontend image
+      - name: Build and push Docker image for ${{ matrix.app }}
+        if: steps.check_changes.outputs.changed == 'true'
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ./apps/frontend/Dockerfile
-          push: true
-          tags: ghcr.io/${{ steps.string-utils.outputs.lowercase }}/frontend:latest
-          # 👇 핵심 수정: AMD와 ARM 아키텍처용 이미지를 모두 빌드
-          platforms: linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      # --- 백엔드 이미지 빌드 및 푸시 ---
-      - name: Build and push Backend image
-        uses: docker/build-push-action@v6
-        with:
-          context: ./apps/backend
-          file: ./apps/backend/Dockerfile
-          push: true
-          tags: ghcr.io/${{ steps.string-utils.outputs.lowercase }}/backend:latest
-          # 👇 핵심 수정: AMD와 ARM 아키텍처용 이미지를 모두 빌드
+          # 각 앱에 맞는 빌드 컨텍스트를 지정합니다.
+          context: ${{ matrix.app == 'backend' && './apps/backend' || '.' }}
+          file: ./apps/${{ matrix.app }}/Dockerfile
+          # main 브랜치에 push 될 때만 실제로 이미지를 푸시합니다.
+          push: github.event_name == 'push'
+          tags: ghcr.io/${{ steps.string-utils.outputs.lowercase }}/${{ matrix.app }}:latest
           platforms: linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
