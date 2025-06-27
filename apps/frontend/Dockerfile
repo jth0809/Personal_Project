@@ -10,7 +10,7 @@ WORKDIR /app
 
 # 루트의 package.json, pnpm-lock.yaml 등을 먼저 복사하여
 # 소스코드가 아닌 의존성만 변경되었을 때 캐시를 활용
-COPY ../../pnpm-lock.yaml ./
+COPY ../../package-lock.json ./
 COPY ../../package.json ./
 COPY ../../turbo.json ./
 COPY ./package.json ./
