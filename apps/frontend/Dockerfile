@@ -5,7 +5,6 @@
 FROM node:lts-slim AS dependencies
 
 # 알파인 리눅스에서 필요한 라이브러리 설치
-RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
