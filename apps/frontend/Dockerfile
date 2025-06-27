@@ -30,7 +30,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # 터보레포를 사용하여 프론트엔드 앱만 빌드
-RUN npm install -g turbo && turbo run build --filter=frontend
+RUN npx turbo run build --filter=frontend
 
 
 # =========================================
