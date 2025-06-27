@@ -3,70 +3,49 @@ name: Build and Push Docker Images
 on:
   push:
     branches:
-      - main # main 브랜치에 push 될 때만 실행
+      - main # main 브랜치에 push 될 때 실행
 
 jobs:
-  build-and-push:
-    # 1. 어떤 환경에서 실행할 것인가?
+  build-and-push-images:
     runs-on: ubuntu-latest
-
-    # 2. 어떤 앱을 빌드할지 매트릭스(Matrix)로 정의
-    strategy:
-      matrix:
-        app: [frontend, backend] # 'frontend'와 'backend'에 대해 각각 job 실행
-
+    
     steps:
-      # 3. 변경된 파일 감지를 위한 전체 히스토리 클론
+      # 1. 소스코드 가져오기
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      # 4. (핵심) 변경된 앱만 골라내기
-      # 이전 커밋과 비교하여 현재 앱 폴더에 변경이 있었는지 확인
-      - name: Detect changed app
-        id: changed_app
-        run: |
-          if git diff --quiet HEAD~1 HEAD -- apps/${{ matrix.app }}/ packages/; then
-            echo "no changes detected in ${{ matrix.app }} or shared packages."
-            echo "changed=false" >> $GITHUB_OUTPUT
-          else
-            echo "changes detected in ${{ matrix.app }} or shared packages."
-            echo "changed=true" >> $GITHUB_OUTPUT
-          fi
-
-      # 5. Docker Buildx 설정 (멀티 플랫폼 빌드 등 지원)
+      # 2. Docker Buildx 설정 (멀티-플랫폼 빌드 등 지원)
       - name: Set up Docker Buildx
-        if: steps.changed_app.outputs.changed == 'true' # 변경이 있을 때만 실행
         uses: docker/setup-buildx-action@v3
 
-      # 6. GitHub Container Registry (GHCR)에 로그인
+      # 3. GitHub Container Registry (GHCR)에 로그인
       - name: Log in to GHCR
-        if: steps.changed_app.outputs.changed == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }} # GITHUB_TOKEN은 자동으로 생성됨
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 7. Docker 이미지 메타데이터(태그 등) 생성
-      - name: Extract metadata for Docker
-        id: meta
-        if: steps.changed_app.outputs.changed == 'true'
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository }}/${{ matrix.app }}
-
-      # 8. Docker 이미지 빌드 및 푸시
-      - name: Build and push Docker image
-        id: build-and-push
-        if: steps.changed_app.outputs.changed == 'true'
+      # --- 프론트엔드 이미지 빌드 및 푸시 ---
+      - name: Build and push Frontend image
         uses: docker/build-push-action@v6
         with:
-          context: . # Dockerfile의 위치를 찾기 위한 전체 컨텍스트
-          file: ./apps/${{ matrix.app }}/Dockerfile # 각 앱의 Dockerfile 경로
+          context: .
+          file: ./apps/frontend/Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ghcr.io/${{ github.repository }}/frontend:latest
+          # 빌드 캐시를 사용하여 후속 빌드 속도 향상
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # --- 백엔드 이미지 빌드 및 푸시 ---
+      - name: Build and push Backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/backend/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/backend:latest
+          # 빌드 캐시를 사용하여 후속 빌드 속도 향상
           cache-from: type=gha
           cache-to: type=gha,mode=max
