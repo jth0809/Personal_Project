@@ -8,6 +8,8 @@ metadata:
     kubernetes.io/ingress.class: "nginx"
     nginx.ingress.kubernetes.io/rewrite-target: /$2
     cert-manager.io/cluster-issuer: "zerossl-prod"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/x-forwarded-proto: "https"
 spec:
   tls:
       - hosts:
@@ -17,8 +19,6 @@ spec:
         secretName: myapp-com-tls 
   rules:
   - host: jjangyushop.kro.kr
-  # myapp.com 이라는 도메인으로 들어오는 요청에 대한 규칙
-  # 실제 소유하고 있는 도메인으로 변경해야 합니다.
     http:
       paths:
         # '/api' 로 시작하는 모든 경로는 백엔드 서비스로 연결합니다.
