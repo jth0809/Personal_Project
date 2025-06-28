@@ -1,0 +1,23 @@
+# clusters/my-cluster/cert-manager-release.yaml
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  name: cert-manager
+  namespace: cert-manager
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: cert-manager
+      version: "v1.15.1"
+      sourceRef:
+        kind: HelmRepository
+        name: jetstack
+        namespace: flux-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  # cert-manager 설치 시 반드시 필요한 CRD(Custom Resource Definitions)를 함께 설치하는 옵션
+  values:
+    installCRDs: true

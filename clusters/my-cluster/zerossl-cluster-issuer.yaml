@@ -1,0 +1,23 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: zerossl-prod
+spec:
+  acme:
+    # ZeroSSL의 ACME 서버 주소
+    server: https://acme.zerossl.com/v2/EAB
+    email: jth0809@naver.com # 👈 본인의 이메일 주소로 변경
+    privateKeySecretRef:
+      name: zerossl-prod-private-key
+    # 2단계에서 생성한 EAB 시크릿 정보를 참조하도록 설정
+    externalAccountBinding:
+      keyID:
+        name: zerossl-eab-secret
+        key: kid
+      keySecretRef:
+        name: zerossl-eab-secret
+        key: hmacKey
+    solvers:
+    - http01:
+        ingress:
+          class: nginx
