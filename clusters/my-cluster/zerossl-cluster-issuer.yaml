@@ -4,7 +4,7 @@ metadata:
   name: zerossl-prod
 spec:
   acme:
-    server: https://acme.zerossl.com/v2/EAB
+    server: https://acme.zerossl.com/v2/DV90
     email: jth0809@naver.com
     privateKeySecretRef:
       name: zerossl-prod-private-key
@@ -13,7 +13,6 @@ spec:
       keySecretRef:
         name: zerossl-hmac-secret
         key: hmacKey
-        
     solvers:
     - http01:
         ingress:
