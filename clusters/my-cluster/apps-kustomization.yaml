@@ -1,0 +1,15 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: cluster-apps
+  namespace: flux-system
+spec:
+  # 👇 핵심: 'cluster-infra' 작업이 성공적으로 끝나기 전에는 시작하지 않음
+  dependsOn:
+    - name: cluster-infra
+  interval: 10m0s
+  path: ./clusters/my-cluster/apps # 'apps' 폴더를 가리킴
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system

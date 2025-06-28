@@ -1,12 +1,10 @@
+# clusters/my-cluster/infra/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - cert-manager-namespace.yaml
-  - backend.yaml
-  - frontend.yaml
-  - ingress.yaml
-  - ingress-nginx-repo.yaml
-  - ingress-nginx-release.yaml
   - jetstack-repo.yaml
   - cert-manager-release.yaml
+  - ingress-nginx-repo.yaml
+  - ingress-nginx-release.yaml
   - zerossl-cluster-issuer.yaml
