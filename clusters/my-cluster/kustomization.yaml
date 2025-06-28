@@ -7,3 +7,6 @@ resources:
   # 만약 Ingress Controller도 GitOps로 관리한다면 아래 파일들도 포함
   - ingress-nginx-repo.yaml
   - ingress-nginx-release.yaml
+  - jetstack-repo.yaml
+  - cert-manager-release.yaml
+  - zerossl-cluster-issuer.yaml
