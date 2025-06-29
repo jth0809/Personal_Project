@@ -9,7 +9,6 @@ spec:
   chart:
     spec:
       chart: loki
-      # Artifact Hub 또는 GitHub에서 확인한 안정적인 최신 버전
       version: "6.30.1"
       sourceRef:
         kind: HelmRepository
@@ -21,39 +20,50 @@ spec:
   upgrade:
     remediation:
       retries: 3
-  # Helm 차트의 공식 values.yaml 구조에 맞춘 최종 설정
   values:
-    # 1. 실행 모드를 'SingleBinary'로 최상단에 명시합니다.
-    deploymentMode: SingleBinary
-    
-    # 2. 'loki:' 키 아래에 Loki 애플리케이션의 핵심 설정을 정의합니다.
-    #    이 구조는 공식 values.yaml의 구조와 정확히 일치합니다.
     loki:
-      auth_enabled: false
-
-      # 스토리지 타입을 명확하게 'filesystem'으로 지정합니다.
-      storage:
-        type: 'filesystem'
+      deploymentMode: SingleBinary
       
-      # 파일 시스템을 사용하기 위한 표준 스키마 설정입니다.
-      schemaConfig:
-        configs:
-          - from: "2024-01-01"
-            store: boltdb-shipper
-            object_store: filesystem
-            schema: v12
-            index:
-              prefix: index_
-              period: 24h
-    
-    # 3. 'singleBinary:' 키 아래에는 이 모드에 해당하는 Pod의 설정을 정의합니다.
+      # 👇 핵심 수정: schema_config를 최신 TSDB 방식으로 변경합니다.
+      structuredConfig:
+        auth_enabled: false
+        server:
+          http_listen_port: 3100
+        ingester:
+          lifecycler:
+            ring:
+              kvstore:
+                store: inmemory
+              replication_factor: 1
+            final_sleep: 0s
+          chunk_idle_period: 1h
+          max_chunk_age: 1h
+          chunk_target_size: 1048576
+          chunk_retain_period: 1m
+          max_transfer_retries: 0
+        
+        # 스키마 설정을 TSDB와 v13으로 변경합니다.
+        schema_config:
+          configs:
+            - from: "2024-01-01"
+              store: tsdb
+              object_store: filesystem
+              schema: v13
+              index:
+                prefix: index_
+                period: 24h
+        
+        # storage_config에서 boltdb_shipper 관련 설정을 제거하고
+        # filesystem 경로만 남깁니다.
+        storage_config:
+          filesystem:
+            directory: /var/loki/chunks
+
     singleBinary:
       replicas: 1
-      # 영속성을 위한 디스크 설정
       persistence:
         enabled: true
         size: 10Gi
-      # Pod에 대한 자원 제한 설정
       resources:
         requests:
           cpu: 200m
@@ -62,11 +72,9 @@ spec:
           cpu: "1" # 1 core
           memory: 1Gi
     
-    # 4. 테스트 기능은 비활성화하여 용량 초과 오류를 방지합니다.
     test:
       enabled: false
 
-    # 5. 분산 모드 컴포넌트들은 사용하지 않으므로 명시적으로 비활성화합니다.
     write:
       replicas: 0
     read:
