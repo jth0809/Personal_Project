@@ -20,50 +20,8 @@ spec:
     remediation:
       retries: 3
   values:
-    # loki라는 최상위 키 아래에 모든 설정을 배치합니다.
     loki:
-      # deploymentMode는 loki 설정의 일부입니다.
       deploymentMode: SingleBinary
-
-      # 👇 핵심 수정: config 키 뒤에 파이프(|)를 추가하고,
-      #    내용 전체를 한 단계 더 들여쓰기하여 '통짜 문자열'로 만듭니다.
-      config: |
-        auth_enabled: false
-        server:
-          http_listen_port: 3100
-        ingester:
-          lifecycler:
-            ring:
-              kvstore:
-                store: inmemory
-              replication_factor: 1
-            final_sleep: 0s
-          chunk_idle_period: 1h
-          max_chunk_age: 1h
-          chunk_target_size: 1048576
-          chunk_retain_period: 1m
-          max_transfer_retries: 0
-        
-        schema_config:
-          configs:
-            - from: "2020-10-24" # 날짜는 반드시 따옴표로 감싸야 합니다.
-              store: boltdb-shipper
-              object_store: filesystem
-              schema: v11
-              index:
-                prefix: index_
-                period: 24h
-        
-        storage_config:
-          boltdb_shipper:
-            active_index_directory: /var/loki/boltdb-shipper-active
-            cache_location: /var/loki/boltdb-shipper-cache
-            cache_ttl: 24h
-            shared_store: filesystem
-          filesystem:
-            directory: /var/loki/chunks
-
-    # singleBinary 모드에 대한 설정은 loki 키와 같은 레벨에 둡니다.
     singleBinary:
       replicas: 1
       persistence:
@@ -74,13 +32,5 @@ spec:
           cpu: 200m
           memory: 512Mi
         limits:
-          cpu: "1" # 1 core
+          cpu: "1"
           memory: 1Gi
-
-    # 분산 모드 컴포넌트는 비활성화합니다.
-    write:
-      replicas: 0
-    read:
-      replicas: 0
-    backend:
-      replicas: 0
