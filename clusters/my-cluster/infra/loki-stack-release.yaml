@@ -24,19 +24,20 @@ spec:
   # Helm 차트의 공식 values.yaml 구조에 맞춘 최종 설정
   values:
     # 1. 실행 모드를 'SingleBinary'로 최상단에 명시합니다.
-    #    이렇게 하면 'scalable targets' 유효성 검사 오류가 해결됩니다.
     deploymentMode: SingleBinary
     
-    # 2. 'loki:' 키 아래에, 필요한 설정만 개별적으로 덮어씁니다.
-    #    이것이 Helm 템플릿 오류를 해결하는 가장 확실한 방법입니다.
+    # 2. 'loki:' 키 아래에, Loki 애플리케이션의 내부 동작에 관한 설정만 정의합니다.
     loki:
       auth_enabled: false
-      # 2-1. 저장소 타입을 'filesystem'으로 명시합니다.
-      #      이 설정은 차트가 S3 같은 오브젝트 스토리지 설정을 찾지 않도록 합니다.
+      
+      # 👇 핵심 수정: 로그 볼륨 기능을 활성화하는 limits_config를 추가합니다.
+      limits_config:
+        volume_enabled: true
+      
       storage:
         type: 'filesystem'
       
-      # 2-2. 스키마 설정을 최신 TSDB 방식으로 덮어씁니다.
+      # 스키마 설정을 최신 TSDB 방식으로 덮어씁니다.
       schemaConfig:
         configs:
           - from: "2024-01-01"
