@@ -10,7 +10,7 @@ spec:
     spec:
       chart: loki
       # Artifact Hub 또는 GitHub에서 확인한 안정적인 최신 버전
-      version: "6.7.2"
+      version: "6.30.1"
       sourceRef:
         kind: HelmRepository
         name: grafana
@@ -24,46 +24,28 @@ spec:
   # Helm 차트의 공식 values.yaml 구조에 맞춘 최종 설정
   values:
     # 1. 실행 모드를 'SingleBinary'로 최상단에 명시합니다.
-    #    'loki:' 키 아래가 아닌, values의 바로 아래 단계입니다.
     deploymentMode: SingleBinary
     
-    # 2. 'loki:' 키 아래에는 Loki 애플리케이션의 내부 설정을 정의합니다.
+    # 2. 'loki:' 키 아래에, 필요한 설정만 개별적으로 덮어씁니다.
+    #    이렇게 하면 차트의 기본 템플릿 로직을 안전하게 활용할 수 있습니다.
     loki:
-      # 'structuredConfig'를 사용하면 Helm이 알아서 올바른 형식으로 변환해 줍니다.
-      structuredConfig:
-        auth_enabled: false
-        server:
-          http_listen_port: 3100
-        ingester:
-          lifecycler:
-            ring:
-              kvstore:
-                store: inmemory
-              replication_factor: 1
-            final_sleep: 0s
-          chunk_idle_period: 1h
-          max_chunk_age: 1h
-          chunk_target_size: 1048576
-          chunk_retain_period: 1m
-          max_transfer_retries: 0
-        
-        # 스키마 설정을 최신 TSDB 방식으로 변경합니다.
-        schema_config:
-          configs:
-            - from: "2024-01-01"
-              store: tsdb
-              object_store: filesystem
-              schema: v13
-              index:
-                prefix: index_
-                period: 24h
-        
-        # 파일 시스템 저장소의 디렉토리 경로를 정의합니다.
-        storage_config:
-          filesystem:
-            directory: /var/loki/chunks
-    
-    # 3. 'singleBinary:' 키 아래에는 이 모드에 해당하는 Pod의 설정을 정의합니다.
+      # 2-1. 저장소 타입을 'filesystem'으로 명시합니다.
+      storage:
+        type: 'filesystem'
+      
+      # 2-2. (핵심 수정) 스키마 설정을 최신 TSDB 방식으로 덮어씁니다.
+      #      이것이 'schema v12', 'boltdb-shipper' 오류를 해결합니다.
+      schemaConfig:
+        configs:
+          - from: "2024-01-01"
+            store: tsdb
+            object_store: filesystem
+            schema: v13
+            index:
+              prefix: index_
+              period: 24h
+            
+    # 3. 'singleBinary:' 모드에 대한 세부 설정을 정의합니다.
     singleBinary:
       replicas: 1
       # 영속성을 위한 디스크 설정
