@@ -8,7 +8,7 @@ spec:
   chart:
     spec:
       chart: loki
-      version: "6.30.1" # 안정적인 최신 버전을 사용합니다.
+      version: "6.7.2" # 안정적인 최신 버전을 사용합니다.
       sourceRef:
         kind: HelmRepository
         name: grafana
@@ -20,10 +20,14 @@ spec:
     remediation:
       retries: 3
   values:
-    # 👇 핵심: 모호함을 없애기 위해 Loki의 설정을 명시적으로 직접 정의합니다.
+    # loki라는 최상위 키 아래에 모든 설정을 배치합니다.
     loki:
-      # 이 블록은 Loki의 메인 설정 파일(loki-config.yaml)에 해당합니다.
-      config:
+      # deploymentMode는 loki 설정의 일부입니다.
+      deploymentMode: SingleBinary
+
+      # 👇 핵심 수정: config 키 뒤에 파이프(|)를 추가하고,
+      #    내용 전체를 한 단계 더 들여쓰기하여 '통짜 문자열'로 만듭니다.
+      config: |
         auth_enabled: false
         server:
           http_listen_port: 3100
@@ -40,11 +44,9 @@ spec:
           chunk_retain_period: 1m
           max_transfer_retries: 0
         
-        # 스토리지 타입을 filesystem으로 명확히 하고,
-        # boltdb-shipper를 인덱스 저장소로 지정합니다.
         schema_config:
           configs:
-            - from: 2020-10-24
+            - from: "2020-10-24" # 날짜는 반드시 따옴표로 감싸야 합니다.
               store: boltdb-shipper
               object_store: filesystem
               schema: v11
@@ -52,8 +54,6 @@ spec:
                 prefix: index_
                 period: 24h
         
-        # 파일 시스템 저장소의 디렉토리 경로를 지정합니다.
-        # 이 경로는 아래 persistence에 의해 생성된 볼륨 내부를 가리킵니다.
         storage_config:
           boltdb_shipper:
             active_index_directory: /var/loki/boltdb-shipper-active
@@ -63,14 +63,12 @@ spec:
           filesystem:
             directory: /var/loki/chunks
 
-    # 단일 바이너리 모드로 실행되도록 명시합니다.
+    # singleBinary 모드에 대한 설정은 loki 키와 같은 레벨에 둡니다.
     singleBinary:
       replicas: 1
-      # 영속성을 위한 디스크 설정
       persistence:
         enabled: true
         size: 10Gi
-      # 로키 Pod에 대한 자원 제한 설정
       resources:
         requests:
           cpu: 200m
@@ -79,8 +77,7 @@ spec:
           cpu: "1" # 1 core
           memory: 1Gi
 
-    # Loki의 다른 컴포넌트들(distributor, ingester 등)은
-    # singleBinary 모드이므로 모두 비활성화합니다.
+    # 분산 모드 컴포넌트는 비활성화합니다.
     write:
       replicas: 0
     read:
