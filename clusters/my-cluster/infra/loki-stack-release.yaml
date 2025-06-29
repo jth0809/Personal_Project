@@ -10,7 +10,7 @@ spec:
     spec:
       chart: loki
       # Artifact Hub 또는 GitHub에서 확인한 안정적인 최신 버전
-      version: "6.7.2"
+      version: "6.30.1"
       sourceRef:
         kind: HelmRepository
         name: grafana
@@ -26,62 +26,56 @@ spec:
     # 1. 실행 모드를 'SingleBinary'로 최상단에 명시합니다.
     deploymentMode: SingleBinary
     
-    # 2. 'loki:' 키 아래에, Loki 애플리케이션의 핵심 동작을 정의합니다.
-    #    'structuredConfig'를 사용하면 Helm이 알아서 올바른 형식으로 변환해 줍니다.
+    # 2. 'loki:' 키 아래에, Loki 애플리케이션의 내부 동작에 관한 설정만 정의합니다.
     loki:
-      structuredConfig:
-        auth_enabled: false
-        server:
-          http_listen_port: 3100
-        common:
-          path_prefix: /var/loki
-          storage:
-            filesystem:
-              chunks_directory: /var/loki/chunks
-              rules_directory: /var/loki/rules
-          replication_factor: 1
-          ring:
-            instance_addr: ${HOSTNAME}
-            kvstore:
-              store: inmemory
-        
-        # 파일 시스템을 사용하기 위한 최신 스키마 설정
-        schema_config:
-          configs:
-            - from: "2024-01-01"
-              store: tsdb
-              object_store: filesystem
-              schema: v13
-              index:
-                prefix: index_
-                period: 24h
-        
-        # 로그 볼륨 기능을 위한 설정
-        limits_config:
-          volume_enabled: true
+      auth_enabled: false
+      
+      limits_config:
+        volume_enabled: true
 
-    # 3. 'singleBinary:' 모드에 대한 Pod 설정을 정의합니다.
+      storage:
+        type: 'filesystem'
+        # 👇 템플릿 오류를 회피하기 위한 더미(dummy) 값 추가
+        bucketNames:
+          chunks: "fake-bucket"
+          ruler: "fake-bucket"
+          admin: "fake-bucket"
+      
+      # 스키마 설정을 최신 TSDB 방식으로 덮어씁니다.
+      schemaConfig:
+        configs:
+          - from: "2024-01-01"
+            store: tsdb
+            object_store: filesystem
+            schema: v13
+            index:
+              prefix: index_
+              period: 24h
+            
+    # 3. 'singleBinary:' 모드에 대한 세부 설정을 정의합니다.
     singleBinary:
       replicas: 1
+      # 영속성을 위한 디스크 설정
       persistence:
         enabled: true
         size: 10Gi
+      # Pod에 대한 자원 제한 설정
       resources:
         requests:
           cpu: 200m
           memory: 512Mi
         limits:
-          cpu: "1"
+          cpu: "1" # 1 core
           memory: 1Gi
     
-    # 4. 불필요한 모든 다른 컴포넌트는 명시적으로 비활성화합니다.
+    # 4. (핵심 수정) 테스트 기능을 비활성화하여 "file is larger than the maximum" 오류를 해결합니다.
     test:
       enabled: false
+
+    # 5. 분산 모드 컴포넌트들은 사용하지 않으므로 명시적으로 비활성화합니다.
     write:
-      enabled: false
+      replicas: 0
     read:
-      enabled: false
+      replicas: 0
     backend:
-      enabled: false
-    gateway:
-      enabled: false
+      replicas: 0
