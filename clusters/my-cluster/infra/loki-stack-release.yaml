@@ -21,35 +21,41 @@ spec:
   upgrade:
     remediation:
       retries: 3
+  # Helm 차트의 복잡한 템플릿 로직을 우회하는, 가장 명시적인 설정
   values:
-    # 1. 실행 모드를 'SingleBinary'로 최상단에 명시합니다.
+    # 1. 실행 모드를 'SingleBinary'로 지정
     deploymentMode: SingleBinary
     
-    # 2. 'loki:' 키 아래에, 필요한 설정만 개별적으로 덮어씁니다.
+    # 2. 'loki.structuredConfig'를 사용하여 Loki의 설정을 직접, 그리고 완전하게 정의합니다.
+    #    이렇게 하면 차트의 기본 템플릿 오류를 완전히 우회할 수 있습니다.
     loki:
-      auth_enabled: false
-      
-      storage:
-        type: 'filesystem'
-        # 👇 핵심 수정: 템플릿 오류를 회피하기 위한 더미(dummy) 값 추가
-        # 이 차트는 filesystem을 사용해도 object storage의 키를 확인하는 버그가 있습니다.
-        bucketNames:
-          chunks: "fake-bucket"
-          ruler: "fake-bucket"
-          admin: "fake-bucket"
-      
-      # 스키마 설정을 최신 TSDB 방식으로 덮어씁니다.
-      schemaConfig:
-        configs:
-          - from: "2024-01-01"
-            store: tsdb
-            object_store: filesystem
-            schema: v13
-            index:
-              prefix: index_
-              period: 24h
-            
-    # 3. 'singleBinary:' 모드에 대한 세부 설정을 정의합니다.
+      structuredConfig:
+        auth_enabled: false
+        server:
+          http_listen_port: 3100
+        common:
+          path_prefix: /var/loki
+          storage:
+            filesystem:
+              chunks_directory: /var/loki/chunks
+              rules_directory: /var/loki/rules
+          replication_factor: 1
+          ring:
+            instance_addr: ${HOSTNAME}
+            kvstore:
+              store: inmemory
+        
+        schema_config:
+          configs:
+            - from: "2024-01-01"
+              store: boltdb-shipper
+              object_store: filesystem
+              schema: v11
+              index:
+                prefix: index_
+                period: 24h
+                
+    # 3. 'singleBinary' 모드에 대한 Pod 설정을 정의합니다.
     singleBinary:
       replicas: 1
       persistence:
@@ -60,17 +66,17 @@ spec:
           cpu: 200m
           memory: 512Mi
         limits:
-          cpu: "1" # 1 core
+          cpu: "1"
           memory: 1Gi
     
-    # 4. 테스트 기능은 비활성화하여 용량 초과 오류를 방지합니다.
+    # 4. 불필요한 모든 다른 컴포넌트를 명시적으로 비활성화합니다.
     test:
       enabled: false
-
-    # 5. 분산 모드 컴포넌트들은 사용하지 않으므로 명시적으로 비활성화합니다.
     write:
-      replicas: 0
+      enabled: false
     read:
-      replicas: 0
+      enabled: false
     backend:
-      replicas: 0
+      enabled: false
+    gateway:
+      enabled: false
