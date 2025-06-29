@@ -1,0 +1,55 @@
+# clusters/my-cluster/infra/prometheus-stack-release.yaml
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  name: kube-prometheus-stack
+  namespace: monitoring # monitoring 네임스페이스에 설치
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: kube-prometheus-stack
+      version: "57.0.0" # 안정적인 버전을 명시
+      sourceRef:
+        kind: HelmRepository
+        name: prometheus-community
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  # 👇 자원 사용량을 제한하여 안정성을 확보합니다.
+  values:
+    # 프로메테우스 자원 설정
+    prometheus:
+      prometheusSpec:
+        resources:
+          requests:
+            cpu: 200m
+            memory: 512Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+    
+    # 그라파나 자원 설정
+    grafana:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 250m
+          memory: 256Mi
+          
+    # 얼럿매니저 자원 설정
+    alertmanager:
+      alertmanagerSpec:
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
