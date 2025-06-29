@@ -9,45 +9,45 @@ spec:
   chart:
     spec:
       chart: loki
-      version: "6.30.1" # 안정적인 최신 버전을 사용합니다.
+      version: "6.30.1"
       sourceRef:
         kind: HelmRepository
         name: grafana
         namespace: flux-system
-  install:
-    remediation:
-      retries: 3
-  upgrade:
-    remediation:
-      retries: 3
+  # Helm 차트의 복잡한 기본값을 무시하고, 가장 단순하고 명시적인 설정을 제공합니다.
   values:
-    # 1. 실행 모드를 'SingleBinary'로 최상단에 명시합니다.
+    # 실행 모드를 'SingleBinary'로 지정합니다.
     deploymentMode: SingleBinary
-    
-    # 2. 'loki:' 키 아래에, 필요한 설정만 개별적으로 덮어씁니다.
+
+    # 'loki:' 키 아래에, 애플리케이션의 핵심 동작을 정의합니다.
     loki:
-      # 👇 핵심 수정: 멀티 테넌시 인증을 비활성화합니다.
-      auth_enabled: false
-      
-      limits_config:
-          volume_enabled: true
-      
-      # 스토리지 타입을 'filesystem'으로 명시합니다.
-      storage:
-        type: 'filesystem'
-      
-      # 스키마 설정을 최신 TSDB 방식으로 덮어씁니다.
-      schemaConfig:
-        configs:
-          - from: "2024-01-01"
-            store: tsdb
-            object_store: filesystem
-            schema: v13
-            index:
-              prefix: index_
-              period: 24h
-            
-    # 3. 'singleBinary:' 모드에 대한 세부 설정을 정의합니다.
+      # structuredConfig를 사용하여 설정을 명확하게 그룹화합니다.
+      structuredConfig:
+        auth_enabled: false
+        server:
+          http_listen_port: 3100
+        common:
+          path_prefix: /var/loki
+          storage:
+            filesystem:
+              chunks_directory: /var/loki/chunks
+              rules_directory: /var/loki/rules
+          replication_factor: 1
+          ring:
+            instance_addr: ${HOSTNAME}
+            kvstore:
+              store: inmemory
+        schema_config:
+          configs:
+            - from: "2024-01-01"
+              store: boltdb-shipper
+              object_store: filesystem
+              schema: v11
+              index:
+                prefix: index_
+                period: 24h
+
+    # 'singleBinary:' 모드에 대한 Pod 설정을 정의합니다.
     singleBinary:
       replicas: 1
       persistence:
@@ -58,14 +58,12 @@ spec:
           cpu: 200m
           memory: 512Mi
         limits:
-          cpu: "1" # 1 core
+          cpu: "1"
           memory: 1Gi
     
-    # 4. 테스트 기능은 비활성화합니다.
+    # 불필요한 테스트와 분산 모드 컴포넌트는 모두 비활성화합니다.
     test:
       enabled: false
-
-    # 5. 분산 모드 컴포넌트들은 사용하지 않으므로 명시적으로 비활성화합니다.
     write:
       replicas: 0
     read:
