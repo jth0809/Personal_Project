@@ -8,7 +8,8 @@ spec:
   chart:
     spec:
       chart: loki
-      version: "6.30.1" # 안정적인 최신 버전을 사용합니다.
+      # Artifact Hub 또는 GitHub에서 확인한 안정적인 최신 버전
+      version: "6.30.1"
       sourceRef:
         kind: HelmRepository
         name: grafana
@@ -19,18 +20,78 @@ spec:
   upgrade:
     remediation:
       retries: 3
+  # Helm 차트의 공식 values.yaml 구조에 맞춘 최종 설정
   values:
+    # 1. 실행 모드를 'SingleBinary'로 최상단에 명시합니다.
+    #    이렇게 하면 'scalable targets' 유효성 검사 오류가 해결됩니다.
+    deploymentMode: SingleBinary
+    
+    # 2. 'loki:' 키 아래에는 Loki 애플리케이션의 내부 설정을 정의합니다.
+    #    'structuredConfig'를 사용하면 Helm이 알아서 올바른 형식으로 변환해 줍니다.
+    #    이것이 'wrong type for value' 오류를 해결합니다.
     loki:
-      deploymentMode: SingleBinary
+      structuredConfig:
+        auth_enabled: false
+        server:
+          http_listen_port: 3100
+        ingester:
+          lifecycler:
+            ring:
+              kvstore:
+                store: inmemory
+              replication_factor: 1
+            final_sleep: 0s
+          chunk_idle_period: 1h
+          max_chunk_age: 1h
+          chunk_target_size: 1048576
+          chunk_retain_period: 1m
+          max_transfer_retries: 0
+        
+        # 파일 시스템을 사용하기 위한 표준 스키마 설정입니다.
+        schema_config:
+          configs:
+            - from: "2024-01-01"
+              store: boltdb-shipper
+              object_store: filesystem
+              schema: v12
+              index:
+                prefix: index_
+                period: 24h
+        
+        # 실제 파일이 저장될 경로를 정의합니다.
+        storage_config:
+          boltdb_shipper:
+            active_index_directory: /var/loki/boltdb-shipper-active
+            cache_location: /var/loki/boltdb-shipper-cache
+            cache_ttl: 24h
+            shared_store: filesystem
+          filesystem:
+            directory: /var/loki/chunks
+    
+    # 3. 'singleBinary:' 키 아래에는 이 모드에 해당하는 Pod의 설정을 정의합니다.
     singleBinary:
       replicas: 1
+      # 영속성을 위한 디스크 설정
       persistence:
         enabled: true
         size: 10Gi
+      # Pod에 대한 자원 제한 설정
       resources:
         requests:
           cpu: 200m
           memory: 512Mi
         limits:
-          cpu: "1"
+          cpu: "1" # 1 core
           memory: 1Gi
+    
+    # 4. 테스트 기능은 비활성화하여 용량 초과 오류를 방지합니다.
+    test:
+      enabled: false
+
+    # 5. 분산 모드 컴포넌트들은 사용하지 않으므로 명시적으로 비활성화합니다.
+    write:
+      replicas: 0
+    read:
+      replicas: 0
+    backend:
+      replicas: 0
