@@ -1,4 +1,3 @@
-# clusters/my-cluster/infra/loki-release.yaml
 apiVersion: helm.toolkit.fluxcd.io/v2beta2
 kind: HelmRelease
 metadata:
@@ -9,7 +8,7 @@ spec:
   chart:
     spec:
       chart: loki
-      version: "6.30.1"
+      version: "6.30.1" # 안정적인 최신 버전을 사용합니다.
       sourceRef:
         kind: HelmRepository
         name: grafana
@@ -21,16 +20,70 @@ spec:
     remediation:
       retries: 3
   values:
-    deploymentMode: SingleBinary
-    storage:
-      type: 'filesystem'
-    persistence:
-      enabled: true
-      size: 10Gi
-    resources:
-      requests:
-        cpu: 200m
-        memory: 256Mi
-      limits:
-        cpu: "1" # 1 core
-        memory: 1Gi
+    # 👇 핵심: 모호함을 없애기 위해 Loki의 설정을 명시적으로 직접 정의합니다.
+    loki:
+      # 이 블록은 Loki의 메인 설정 파일(loki-config.yaml)에 해당합니다.
+      config:
+        auth_enabled: false
+        server:
+          http_listen_port: 3100
+        ingester:
+          lifecycler:
+            ring:
+              kvstore:
+                store: inmemory
+              replication_factor: 1
+            final_sleep: 0s
+          chunk_idle_period: 1h
+          max_chunk_age: 1h
+          chunk_target_size: 1048576
+          chunk_retain_period: 1m
+          max_transfer_retries: 0
+        
+        # 스토리지 타입을 filesystem으로 명확히 하고,
+        # boltdb-shipper를 인덱스 저장소로 지정합니다.
+        schema_config:
+          configs:
+            - from: 2020-10-24
+              store: boltdb-shipper
+              object_store: filesystem
+              schema: v11
+              index:
+                prefix: index_
+                period: 24h
+        
+        # 파일 시스템 저장소의 디렉토리 경로를 지정합니다.
+        # 이 경로는 아래 persistence에 의해 생성된 볼륨 내부를 가리킵니다.
+        storage_config:
+          boltdb_shipper:
+            active_index_directory: /var/loki/boltdb-shipper-active
+            cache_location: /var/loki/boltdb-shipper-cache
+            cache_ttl: 24h
+            shared_store: filesystem
+          filesystem:
+            directory: /var/loki/chunks
+
+    # 단일 바이너리 모드로 실행되도록 명시합니다.
+    singleBinary:
+      replicas: 1
+      # 영속성을 위한 디스크 설정
+      persistence:
+        enabled: true
+        size: 10Gi
+      # 로키 Pod에 대한 자원 제한 설정
+      resources:
+        requests:
+          cpu: 200m
+          memory: 512Mi
+        limits:
+          cpu: "1" # 1 core
+          memory: 1Gi
+
+    # Loki의 다른 컴포넌트들(distributor, ingester 등)은
+    # singleBinary 모드이므로 모두 비활성화합니다.
+    write:
+      replicas: 0
+    read:
+      replicas: 0
+    backend:
+      replicas: 0
