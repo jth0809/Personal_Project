@@ -20,14 +20,18 @@ spec:
     remediation:
       retries: 3
   values:
-    persistence:
-      enabled: true
-      size: 10Gi
+    loki:
+      storage:
+        type: 'filesystem'
+
+      persistence:
+        enabled: true
+        size: 10Gi
       
-    resources:
-      requests:
-        cpu: 200m
-        memory: 256Mi
-      limits:
-        cpu: "1" # 1 core
-        memory: 1Gi
+      resources:
+        requests:
+          cpu: 200m
+          memory: 256Mi
+        limits:
+          cpu: "1" # 1 core
+          memory: 1Gi
