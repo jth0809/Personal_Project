@@ -28,6 +28,8 @@ spec:
     loki:
       # 👇 핵심 수정: 멀티 테넌시 인증을 비활성화합니다.
       auth_enabled: false
+      limits_config:
+          volume_enabled: true
       
       # 스토리지 타입을 'filesystem'으로 명시합니다.
       storage:
