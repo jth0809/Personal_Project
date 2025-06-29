@@ -1,3 +1,4 @@
+# clusters/my-cluster/infra/local-path-storage.yaml
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -53,6 +54,9 @@ spec:
         app: local-path-provisioner
     spec:
       serviceAccountName: local-path-provisioner-service-account
+      # 👇 핵심 수정: Pod에 특별한 보안 설정을 추가합니다.
+      securityContext:
+        runAsUser: 0 # root 권한으로 실행
       containers:
       - name: local-path-provisioner
         image: rancher/local-path-provisioner:v0.0.24
@@ -65,6 +69,9 @@ spec:
           mountPath: /etc/config/
         - name: storage-path
           mountPath: /opt/local-path-provisioner
+        # 👇 핵심 수정: 컨테이너에도 보안 설정을 추가합니다.
+        securityContext:
+          privileged: true # 컨테이너에 특권을 부여
       volumes:
         - name: provisioner-config
           configMap:
