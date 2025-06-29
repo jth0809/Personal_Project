@@ -11,6 +11,8 @@ metadata:
     kubernetes.io/ingress.class: "nginx"
     # SSL 인증서를 자동으로 발급받기 위해 이전에 만든 'zerossl-prod'를 사용합니다.
     cert-manager.io/cluster-issuer: "zerossl-prod"
+    nginx.ingress.kubernetes.io/limit-rps: "5" # 초당 10개 요청으로 제한
+    nginx.ingress.kubernetes.io/limit-rpm: "500" # 분당 500개 요청으로 제한
 spec:
   # TLS(SSL) 설정을 추가하여 HTTPS를 활성화합니다.
   tls:
