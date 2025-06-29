@@ -54,15 +54,11 @@ spec:
         app: local-path-provisioner
     spec:
       serviceAccountName: local-path-provisioner-service-account
-      securityContext:
-        runAsUser: 0
       containers:
       - name: local-path-provisioner
         image: rancher/local-path-provisioner:v0.0.26
-        command:
-        - local-path-provisioner
-        - --main-dir
-        - /opt/local-path-provisioner
+        # 👇 핵심 수정: 불필요해진 command 섹션을 완전히 제거합니다.
+        #    이제 컨테이너는 기본 ENTRYPOINT로 실행되고, 설정은 ConfigMap에서 읽습니다.
         resources:
           requests:
             cpu: "50m"
