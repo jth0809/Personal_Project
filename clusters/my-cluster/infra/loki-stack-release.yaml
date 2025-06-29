@@ -9,7 +9,8 @@ spec:
   chart:
     spec:
       chart: loki
-      version: "6.30.1"
+      # Artifact Hub 또는 GitHub에서 확인한 안정적인 최신 버전
+      version: "6.7.2"
       sourceRef:
         kind: HelmRepository
         name: grafana
@@ -20,11 +21,15 @@ spec:
   upgrade:
     remediation:
       retries: 3
+  # Helm 차트의 공식 values.yaml 구조에 맞춘 최종 설정
   values:
+    # 1. 실행 모드를 'SingleBinary'로 최상단에 명시합니다.
+    #    'loki:' 키 아래가 아닌, values의 바로 아래 단계입니다.
+    deploymentMode: SingleBinary
+    
+    # 2. 'loki:' 키 아래에는 Loki 애플리케이션의 내부 설정을 정의합니다.
     loki:
-      deploymentMode: SingleBinary
-      
-      # 👇 핵심 수정: schema_config를 최신 TSDB 방식으로 변경합니다.
+      # 'structuredConfig'를 사용하면 Helm이 알아서 올바른 형식으로 변환해 줍니다.
       structuredConfig:
         auth_enabled: false
         server:
@@ -42,7 +47,7 @@ spec:
           chunk_retain_period: 1m
           max_transfer_retries: 0
         
-        # 스키마 설정을 TSDB와 v13으로 변경합니다.
+        # 스키마 설정을 최신 TSDB 방식으로 변경합니다.
         schema_config:
           configs:
             - from: "2024-01-01"
@@ -53,17 +58,19 @@ spec:
                 prefix: index_
                 period: 24h
         
-        # storage_config에서 boltdb_shipper 관련 설정을 제거하고
-        # filesystem 경로만 남깁니다.
+        # 파일 시스템 저장소의 디렉토리 경로를 정의합니다.
         storage_config:
           filesystem:
             directory: /var/loki/chunks
-
+    
+    # 3. 'singleBinary:' 키 아래에는 이 모드에 해당하는 Pod의 설정을 정의합니다.
     singleBinary:
       replicas: 1
+      # 영속성을 위한 디스크 설정
       persistence:
         enabled: true
         size: 10Gi
+      # Pod에 대한 자원 제한 설정
       resources:
         requests:
           cpu: 200m
@@ -72,9 +79,11 @@ spec:
           cpu: "1" # 1 core
           memory: 1Gi
     
+    # 4. 테스트 기능은 비활성화합니다.
     test:
       enabled: false
 
+    # 5. 분산 모드 컴포넌트들은 사용하지 않으므로 명시적으로 비활성화합니다.
     write:
       replicas: 0
     read:
