@@ -52,7 +52,7 @@ spec:
       # 영속성을 위한 디스크 설정
       persistence:
         enabled: true
-        size: 1Gi
+        size: 10Gi
       # Pod에 대한 자원 제한 설정
       resources:
         requests:

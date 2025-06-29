@@ -1,0 +1,113 @@
+# clusters/my-cluster/infra/local-path-storage.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: local-path-storage
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: local-path-provisioner-service-account
+  namespace: local-path-storage
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: local-path-provisioner-role
+rules:
+- apiGroups: [""]
+  resources: ["nodes", "persistentvolumeclaims"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["persistentvolumes"]
+  verbs: ["get", "list", "watch", "create", "delete"]
+- apiGroups: ["storage.k8s.io"]
+  resources: ["storageclasses"]
+  verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: local-path-provisioner-bind
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: local-path-provisioner-role
+subjects:
+- kind: ServiceAccount
+  name: local-path-provisioner-service-account
+  namespace: local-path-storage
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: local-path-provisioner
+  namespace: local-path-storage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: local-path-provisioner
+  template:
+    metadata:
+      labels:
+        app: local-path-provisioner
+    spec:
+      serviceAccountName: local-path-provisioner-service-account
+      # 컨테이너가 호스트의 파일 시스템에 접근할 수 있도록 root 권한으로 실행합니다.
+      securityContext:
+        runAsUser: 0
+      containers:
+      - name: local-path-provisioner
+        image: rancher/local-path-provisioner:v0.0.24
+        command:
+        - local-path-provisioner
+        - --main-dir
+        - /opt/local-path-provisioner
+        # 👇 핵심 수정: 컨테이너의 자원 요청 및 한도를 설정합니다.
+        resources:
+          requests:
+            cpu: "50m"
+            memory: "50Mi"
+          limits:
+            cpu: "100m"
+            memory: "100Mi"
+        volumeMounts:
+        - name: provisioner-config
+          mountPath: /etc/config/
+        - name: storage-path
+          mountPath: /opt/local-path-provisioner
+      volumes:
+        - name: provisioner-config
+          configMap:
+            name: local-path-config
+        - name: storage-path
+          hostPath:
+            # 이 경로는 실제 VM 인스턴스(호스트)에 존재해야 합니다.
+            path: /opt/local-path-provisioner
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: local-path
+  annotations:
+    # 이 StorageClass를 클러스터의 기본값으로 설정합니다.
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: rancher.io/local-path
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Delete
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: local-path-config
+  namespace: local-path-storage
+data:
+  config.json: |
+    {
+            "nodePathMap":[
+            {
+                    "node":"DEFAULT_PATH_FOR_NON_LISTED_NODES",
+                    "paths":["/opt/local-path-provisioner"]
+            }]
+    }
