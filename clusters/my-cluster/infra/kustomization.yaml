@@ -7,8 +7,9 @@ resources:
   - grafana-repo.yaml
   - prometheus-stack-release.yaml
   - loki-stack-release.yaml
+  - grafana-ingress-class.yaml
   - grafana-ingress.yaml
-  
+
   - cert-manager-namespace.yaml
   - jetstack-repo.yaml
   - cert-manager-release.yaml
