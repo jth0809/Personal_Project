@@ -9,7 +9,8 @@ spec:
   chart:
     spec:
       chart: loki
-      version: "6.30.1" # 안정적인 최신 버전을 사용합니다.
+      # Artifact Hub 또는 GitHub에서 확인한 안정적인 최신 버전
+      version: "6.30.1"
       sourceRef:
         kind: HelmRepository
         name: grafana
@@ -21,47 +22,34 @@ spec:
     remediation:
       retries: 3
   values:
-    # 실행 모드를 'SingleBinary'로 지정합니다.
+    # 1. 실행 모드를 'SingleBinary'로 최상단에 명시합니다.
     deploymentMode: SingleBinary
-
-    # 'loki:' 키 아래에, 애플리케이션의 핵심 동작을 정의합니다.
+    
+    # 2. 'loki:' 키 아래에, 필요한 설정만 개별적으로 덮어씁니다.
     loki:
-      # structuredConfig를 사용하여 설정을 명확하게 그룹화합니다.
-      # 이 구조가 차트의 모든 내부 검증을 통과하는 가장 안정적인 방식입니다.
-      structuredConfig:
-        auth_enabled: false
-        server:
-          http_listen_port: 3100
-        
-        # "unhealthy instances in the ring" 오류를 해결하는 핵심 설정입니다.
-        common:
-          path_prefix: /var/loki
-          storage:
-            filesystem:
-              chunks_directory: /var/loki/chunks
-              rules_directory: /var/loki/rules
-          replication_factor: 1
-          ring:
-            instance_addr: ${HOSTNAME}
-            kvstore:
-              store: inmemory
-        
-        # "Log volume" 안내 메시지를 해결하는 설정입니다.
-        limits_config:
-          volume_enabled: true
-
-        # 파일 시스템을 사용하기 위한 표준 스키마 설정입니다.
-        schema_config:
-          configs:
-            - from: "2024-01-01"
-              store: boltdb-shipper
-              object_store: filesystem
-              schema: v11
-              index:
-                prefix: index_
-                period: 24h
-
-    # 'singleBinary:' 모드에 대한 Pod 설정을 정의합니다.
+      auth_enabled: false
+      
+      storage:
+        type: 'filesystem'
+        # 👇 핵심 수정: 템플릿 오류를 회피하기 위한 더미(dummy) 값 추가
+        # 이 차트는 filesystem을 사용해도 object storage의 키를 확인하는 버그가 있습니다.
+        bucketNames:
+          chunks: "fake-bucket"
+          ruler: "fake-bucket"
+          admin: "fake-bucket"
+      
+      # 스키마 설정을 최신 TSDB 방식으로 덮어씁니다.
+      schemaConfig:
+        configs:
+          - from: "2024-01-01"
+            store: tsdb
+            object_store: filesystem
+            schema: v13
+            index:
+              prefix: index_
+              period: 24h
+            
+    # 3. 'singleBinary:' 모드에 대한 세부 설정을 정의합니다.
     singleBinary:
       replicas: 1
       persistence:
@@ -72,12 +60,14 @@ spec:
           cpu: 200m
           memory: 512Mi
         limits:
-          cpu: "1"
+          cpu: "1" # 1 core
           memory: 1Gi
     
-    # 불필요한 테스트와 분산 모드 컴포넌트는 모두 비활성화합니다.
+    # 4. 테스트 기능은 비활성화하여 용량 초과 오류를 방지합니다.
     test:
       enabled: false
+
+    # 5. 분산 모드 컴포넌트들은 사용하지 않으므로 명시적으로 비활성화합니다.
     write:
       replicas: 0
     read:
