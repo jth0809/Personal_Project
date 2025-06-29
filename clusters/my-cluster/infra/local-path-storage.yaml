@@ -54,17 +54,15 @@ spec:
         app: local-path-provisioner
     spec:
       serviceAccountName: local-path-provisioner-service-account
-      # 컨테이너가 호스트의 파일 시스템에 접근할 수 있도록 root 권한으로 실행합니다.
       securityContext:
         runAsUser: 0
       containers:
       - name: local-path-provisioner
-        image: rancher/local-path-provisioner:v0.0.24
+        image: rancher/local-path-provisioner:v0.0.26
         command:
         - local-path-provisioner
         - --main-dir
         - /opt/local-path-provisioner
-        # 👇 핵심 수정: 컨테이너의 자원 요청 및 한도를 설정합니다.
         resources:
           requests:
             cpu: "50m"
@@ -83,7 +81,6 @@ spec:
             name: local-path-config
         - name: storage-path
           hostPath:
-            # 이 경로는 실제 VM 인스턴스(호스트)에 존재해야 합니다.
             path: /opt/local-path-provisioner
 ---
 apiVersion: storage.k8s.io/v1
@@ -91,7 +88,6 @@ kind: StorageClass
 metadata:
   name: local-path
   annotations:
-    # 이 StorageClass를 클러스터의 기본값으로 설정합니다.
     storageclass.kubernetes.io/is-default-class: "true"
 provisioner: rancher.io/local-path
 volumeBindingMode: WaitForFirstConsumer
