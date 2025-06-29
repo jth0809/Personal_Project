@@ -1,15 +1,14 @@
-# clusters/my-cluster/infra/loki-stack-release.yaml
 apiVersion: helm.toolkit.fluxcd.io/v2beta2
 kind: HelmRelease
 metadata:
-  name: loki-stack
-  namespace: monitoring # monitoring 네임스페이스에 설치
+  name: loki
+  namespace: monitoring
 spec:
   interval: 30m
   chart:
     spec:
-      chart: loki-stack
-      version: "2.10.2"
+      chart: loki
+      version: "6.30.1"
       sourceRef:
         kind: HelmRepository
         name: grafana
@@ -21,28 +20,14 @@ spec:
     remediation:
       retries: 3
   values:
-    # 👇 그라파나와의 자동 연동 설정
-    grafana:
-      # 우리 클러스터에는 이미 kube-prometheus-stack에 그라파나가 있으므로
-      # loki-stack의 그라파나는 설치하지 않습니다.
-      enabled: false
+    persistence:
+      enabled: true
+      size: 10Gi
       
-    # 로키 자원 설정
-    loki:
-      resources:
-        requests:
-          cpu: 200m
-          memory: 256Mi
-        limits:
-          cpu: 500m
-          memory: 512Mi
-
-    # 프롬테일 자원 설정
-    promtail:
-      resources:
-        requests:
-          cpu: 100m
-          memory: 128Mi
-        limits:
-          cpu: 200m
-          memory: 256Mi
+    resources:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+      limits:
+        cpu: "1" # 1 core
+        memory: 1Gi
