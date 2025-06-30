@@ -33,17 +33,8 @@ spec:
       limits_config:
         volume_enabled: true
 
-      common:
-          path_prefix: /var/loki
-          storage:
-            filesystem:
-              chunks_directory: /var/loki/chunks
-              rules_directory: /var/loki/rules
-          replication_factor: 1
-          ring:
-            instance_addr: ${HOSTNAME}
-            kvstore:
-              store: inmemory
+      commonConfig:
+        replication_factor: 1
       
       storage:
         type: 'filesystem'
