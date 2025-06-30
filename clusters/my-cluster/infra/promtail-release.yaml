@@ -24,7 +24,7 @@ spec:
     # 👇 Promtail에게 로그를 보낼 Loki 서버의 주소를 알려줍니다.
     config:
       clients:
-        - url: http://loki:3100/loki/api/v1/push
+        - url: http://loki-gateway.monitoring:80/loki/api/v1/push
 
     # Promtail Pod에 대한 자원 제한 설정
     resources:
