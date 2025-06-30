@@ -1,0 +1,36 @@
+# clusters/my-cluster/infra/promtail-release.yaml
+apiVersion: helm.toolkit.fluxcd.io/v2beta2
+kind: HelmRelease
+metadata:
+  name: promtail
+  namespace: monitoring # Loki와 같은 네임스페이스에 설치
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: promtail
+      version: "6.17.0" # 안정적인 최신 버전
+      sourceRef:
+        kind: HelmRepository
+        name: grafana # Loki와 동일한 레포지토리를 사용
+        namespace: flux-system
+  install:
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  values:
+    # 👇 Promtail에게 로그를 보낼 Loki 서버의 주소를 알려줍니다.
+    config:
+      clients:
+        - url: http://loki:3100/loki/api/v1/push
+
+    # Promtail Pod에 대한 자원 제한 설정
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
