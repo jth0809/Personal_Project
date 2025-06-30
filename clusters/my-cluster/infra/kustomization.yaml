@@ -7,6 +7,7 @@ resources:
   - prometheus-community-repo.yaml
   - grafana-repo.yaml
   - prometheus-stack-release.yaml
+  - promtail-release.yaml
   - loki-stack-release.yaml
   - grafana-ingress-class.yaml
   - grafana-ingress.yaml
