@@ -33,7 +33,7 @@ jobs:
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > oci_api_key.pem
           chmod 600 oci_api_key.pem
-          
+
           SSH_PUBLIC_KEY=$(ssh-keygen -y -f oci_api_key.pem)
 
           terraform init
@@ -51,9 +51,7 @@ jobs:
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
         run: |
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ssh_key.pem
-          chmod 600 ssh_key.pem
-          ansible-playbook -i "${{ steps.tf_apply.outputs.instance_ip }}," --private-key=ssh_key.pem playbook.yml
+          ansible-playbook -i "${{ steps.tf_apply.outputs.instance_ip }}," --private-key=../terraform/oci_api_key.pem playbook.yml
 
       # 6. (핵심) FluxCD Bootstrap 실행
       - name: Bootstrap FluxCD
