@@ -39,12 +39,20 @@ jobs:
 
           SSH_PUBLIC_KEY=$(ssh-keygen -y -f oci_api_key.pem)
 
-          terraform init \
-            -backend-config="bucket=${{ secrets.OCI_TF_BUCKET }}" \
-            -backend-config="key=k0s-cluster/terraform.tfstate" \
-            -backend-config="region=${{ secrets.OCI_REGION }}" \
-            -backend-config="endpoint=https://${{ secrets.OCI_TF_NAMESPACE }}.compat.objectstorage.${{ secrets.OCI_REGION }}.oraclecloud.com" \
-            -backend-config="skip_region_validation=true"
+          cat > backend.tfbackend <<EOF
+          bucket                      = "${{ secrets.OCI_TF_BUCKET }}"
+          key                         = "k0s-cluster/terraform.tfstate"
+          region                      = "${{ secrets.OCI_REGION }}"
+          endpoints = {
+            s3 = "https://${{ secrets.OCI_TF_NAMESPACE }}.compat.objectstorage.${{ secrets.OCI_REGION }}.oraclecloud.com"
+          }
+          skip_region_validation      = true
+          skip_credentials_validation = true
+          force_path_style            = true
+          EOF
+
+          terraform init -backend-config=backend.tfbackend
+          
           terraform apply -auto-approve -var="ssh_public_key=$SSH_PUBLIC_KEY"
           # Terraform의 출력값(공인 IP)을 GitHub Actions의 출력 변수로 설정합니다.
           echo "instance_ip=$(terraform output -raw instance_public_ip)" >> $GITHUB_OUTPUT
