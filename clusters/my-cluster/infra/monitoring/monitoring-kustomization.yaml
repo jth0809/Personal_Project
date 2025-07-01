@@ -1,0 +1,25 @@
+# clusters/my-cluster/infra/02-monitoring/kustomization.yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: monitoring # <-- infra Kustomization에서 참조할 이름
+  namespace: flux-system
+spec:
+  interval: 5m0s
+  path: ./clusters/my-cluster/infra/monitoring
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  resources:
+    - ./prometheus-stack
+    - ./loki-stack
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: kube-prometheus-stack
+      namespace: monitoring
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: loki
+      namespace: monitoring

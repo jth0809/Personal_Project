@@ -1,0 +1,29 @@
+# clusters/my-cluster/infra/02-monitoring/prometheus-stack/kustomization.yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: prometheus-stack-infra
+  namespace: flux-system
+spec:
+  interval: 5m0s
+  path: ./clusters/my-cluster/infra/monitoring/prometheus-stack
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  resources:
+    - monitoring-namespace.yaml
+    - prometheus-community-repo.yaml
+    - grafana-repo.yaml
+    - prometheus-stack-release.yaml
+    - grafana-ingress-class.yaml
+    - grafana-ingress.yaml
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: kube-prometheus-stack
+      namespace: monitoring
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: kube-prometheus-stack-grafana
+      namespace: monitoring

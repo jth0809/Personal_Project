@@ -1,0 +1,25 @@
+# clusters/my-cluster/infra/02-monitoring/loki-stack/kustomization.yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: loki-stack-infra
+  namespace: flux-system
+spec:
+  interval: 5m0s
+  path: ./clusters/my-cluster/infra/monitoring/loki-stack
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  resources:
+    - promtail-release.yaml
+    - loki-stack-release.yaml
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: loki
+      namespace: monitoring
+    - apiVersion: apps/v1
+      kind: DaemonSet
+      name: promtail
+      namespace: monitoring
