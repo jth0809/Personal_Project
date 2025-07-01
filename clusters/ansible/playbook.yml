@@ -18,7 +18,7 @@
       apt:
         name: ['curl', 'gnupg'] # Docker 설치에 필요했던 일부 패키지 제외
         state: present
-        
+
     # -----------------------------------------------------------------
     # 4. Kubernetes 도구 설치 및 설정
     # -----------------------------------------------------------------
@@ -45,6 +45,12 @@
       shell: curl -sSLf https://get.k0s.sh | sh
       args:
         creates: /usr/local/bin/k0s
+
+    - name: Ensure k0s binary is executable
+      file:
+        path: /usr/local/bin/k0s
+        mode: 'a+x'
+        state: file
 
     - name: Install k0s controller as a service
       shell: k0s install controller --single
