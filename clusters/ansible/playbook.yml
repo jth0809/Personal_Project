@@ -42,21 +42,15 @@
     # -----------------------------------------------------------------
     # 5. k0s 클러스터 설치 및 실행
     # -----------------------------------------------------------------
-    - name: Download and install k0s binary if not present
-      shell: |
-        set -e
-        if [ ! -f /usr/local/bin/k0s ]; then
-          echo "k0s not found, downloading..."
-          curl -sSL "https://github.com/k0sproject/k0s/releases/download/{{ k0s_version }}/k0s-{{ k0s_version }}-arm64" -o /usr/local/bin/k0s
-          chmod 755 /usr/local/bin/k0s
-        else
-          echo "k0s already exists, skipping download."
-        fi
+    - name: Install k0s using the official script
+      shell: "curl -sSLf https://get.k0s.sh | sh"
       args:
-        warn: false
+        # 이 인수가 k0s 바이너리가 이미 존재하면, 이 작업을 건너뛰도록 하여
+        # 멱등성을 보장합니다.
+        creates: /usr/local/bin/k0s
 
     - name: Install k0s controller as a service
-      command: k0s install controller --single # 'shell' 대신 더 안전한 'command' 사용
+      command: k0s install controller --single
       args:
         creates: /etc/systemd/system/k0scontroller.service
 
