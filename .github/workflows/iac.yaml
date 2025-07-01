@@ -27,13 +27,15 @@ jobs:
           TF_VAR_user_ocid: ${{ secrets.OCI_USER_OCID }}
           TF_VAR_fingerprint: ${{ secrets.OCI_FINGERPRINT }}
           TF_VAR_private_key_path: "oci_api_key.pem"
-          TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+          #TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
           TF_VAR_compartment_ocid: ${{ secrets.OCI_COMPARTMENT_OCID }}
           TF_VAR_region: ${{ secrets.OCI_REGION }}
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > oci_api_key.pem
+          SSH_PUBLIC_KEY=$(ssh-keygen -y -f private_key.pem)
+
           terraform init
-          terraform apply -auto-approve
+          terraform apply -auto-approve -var="ssh_public_key=$SSH_PUBLIC_KEY"
           # Terraform의 출력값(공인 IP)을 GitHub Actions의 출력 변수로 설정합니다.
           echo "instance_ip=$(terraform output -raw instance_public_ip)" >> $GITHUB_OUTPUT
 
