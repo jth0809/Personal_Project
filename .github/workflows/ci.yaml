@@ -75,7 +75,7 @@ jobs:
           context: ${{ matrix.app == 'backend' && './apps/backend' || '.' }}
           file: ./apps/${{ matrix.app }}/Dockerfile
           # main 브랜치에 push 될 때만 실제로 이미지를 푸시합니다.
-          push: github.event_name == 'push'
+          push: ${{ github.event_name == 'push' }}
           tags: ghcr.io/${{ steps.string-utils.outputs.lowercase }}/${{ matrix.app }}:latest
           platforms: linux/arm64
           cache-from: type=gha
