@@ -42,13 +42,18 @@
     # -----------------------------------------------------------------
     # 5. k0s 클러스터 설치 및 실행
     # -----------------------------------------------------------------
-    - name: Download specific k0s binary for ARM64
-      get_url:
-        url: "https://github.com/k0sproject/k0s/releases/download/{{ k0s_version }}/k0s-{{ k0s_version }}-arm64"
-        dest: "/usr/local/bin/k0s"
-        mode: '0755' # 다운로드와 동시에 실행 권한을 부여합니다.
-      # 👇 핵심 수정: k0s 파일이 존재하지 않을 때만 이 작업을 실행합니다.
-      when: not k0s_binary_stat.stat.exists
+    - name: Download and install k0s binary if not present
+      shell: |
+        set -e
+        if [ ! -f /usr/local/bin/k0s ]; then
+          echo "k0s not found, downloading..."
+          curl -sSL "https://github.com/k0sproject/k0s/releases/download/{{ k0s_version }}/k0s-{{ k0s_version }}-arm64" -o /usr/local/bin/k0s
+          chmod 755 /usr/local/bin/k0s
+        else
+          echo "k0s already exists, skipping download."
+        fi
+      args:
+        warn: false
 
     - name: Install k0s controller as a service
       command: k0s install controller --single # 'shell' 대신 더 안전한 'command' 사용
