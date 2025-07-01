@@ -1,28 +1,4 @@
 # =================================================================
-# Terraform 및 Provider 설정
-# =================================================================
-
-terraform {
-  backend "s3" {
-    # OCI Object Storage는 S3와 호환되므로 's3' 백엔드를 사용합니다.
-    bucket                      = var.object_storage_name # 생성할 버킷 이름
-    key                         = var.object_storage_key # 상태 파일이 저장될 경로
-    region                      = var.region # 버킷이 생성된 리전
-    endpoint                    = var.object_storage_endpoint# 테넌시 네임스페이스로 수정
-    skip_region_validation      = true
-    skip_credentials_validation = true
-    force_path_style            = true
-  }
-
-  required_providers {
-    oci = {
-      source  = "oracle/oci"
-      version = ">= 5.0.0"
-    }
-  }
-}
-
-# =================================================================
 # 변수 정의 (입력값)
 # =================================================================
 
@@ -88,6 +64,31 @@ variable "instance_memory_in_gbs" {
   type        = number
   default     = 24
 }
+
+# =================================================================
+# Terraform 및 Provider 설정
+# =================================================================
+
+terraform {
+  backend "s3" {
+    # OCI Object Storage는 S3와 호환되므로 's3' 백엔드를 사용합니다.
+    bucket                      = var.object_storage_name # 생성할 버킷 이름
+    key                         = var.object_storage_key # 상태 파일이 저장될 경로
+    region                      = var.region # 버킷이 생성된 리전
+    endpoint                    = var.object_storage_endpoint# 테넌시 네임스페이스로 수정
+    skip_region_validation      = true
+    skip_credentials_validation = true
+    force_path_style            = true
+  }
+
+  required_providers {
+    oci = {
+      source  = "oracle/oci"
+      version = ">= 5.0.0"
+    }
+  }
+}
+
 
 # OCI 접속을 위한 Provider 설정
 provider "oci" {
