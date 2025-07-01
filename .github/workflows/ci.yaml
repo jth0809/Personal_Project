@@ -31,7 +31,7 @@ jobs:
       # 1. 변경된 파일 목록을 가져옵니다.
       - name: Get changed files
         id: changed-files
-        uses: tj-actions/changed-files@v44
+        uses: tj-actions/changed-files@v46
 
       # 2. 각 앱의 경로에 변경이 있었는지 확인합니다.
       - name: Check for changes in app path
