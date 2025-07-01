@@ -4,6 +4,7 @@
   vars:
     # 이 플레이북에서 사용할 사용자 계정 이름
     target_user: ubuntu
+    k0s_version: "v1.33.2+k0s.0"
 
   tasks:
     # -----------------------------------------------------------------
@@ -41,8 +42,11 @@
     # -----------------------------------------------------------------
     # 5. k0s 클러스터 설치 및 실행
     # -----------------------------------------------------------------
-    - name: Install k0s
-      shell: curl -sSLf https://get.k0s.sh | sh
+    - name: Download specific k0s binary for ARM64
+      get_url:
+        url: "https://github.com/k0sproject/k0s/releases/download/{{ k0s_version }}/k0s-{{ k0s_version }}-arm64"
+        dest: "/usr/local/bin/k0s"
+        mode: '0755' # 다운로드와 동시에 실행 권한을 부여합니다.
       args:
         creates: /usr/local/bin/k0s
 
