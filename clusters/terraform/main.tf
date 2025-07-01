@@ -3,16 +3,7 @@
 # =================================================================
 
 terraform {
-  backend "s3" {
-    # OCI Object Storage는 S3와 호환되므로 's3' 백엔드를 사용합니다.
-    bucket                      = "tf_state_bucket" # 👈 1. 생성할 버킷 이름
-    key                         = "k0s-cluster/terraform.tfstate" # 상태 파일이 저장될 경로
-    region                      = "ap-chuncheon-1" # 👈 2. 버킷이 생성된 리전
-    endpoint                    = "https://axsvfekd8pf8.compat.objectstorage.ap-chuncheon-1.oraclecloud.com" # 👈 3. 테넌시 네임스페이스로 수정
-    skip_region_validation      = true
-    skip_credentials_validation = true
-    force_path_style            = true
-  }
+  backend "s3" {}
 
   required_providers {
     oci = {
