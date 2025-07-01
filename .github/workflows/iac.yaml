@@ -31,8 +31,6 @@ jobs:
           TF_VAR_compartment_ocid: ${{ secrets.OCI_COMPARTMENT_OCID }}
           TF_VAR_region: ${{ secrets.OCI_REGION }}
           TF_VAR_object_storage_endpoint: ${{ secrets.OCI_OBJECT_STORAGE_ENDPOINT }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.OCI_S3_COMPAT_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.OCI_S3_COMPAT_SECRET_KEY }}
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > oci_api_key.pem
           chmod 600 oci_api_key.pem
@@ -59,7 +57,7 @@ jobs:
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
         run: |
-          ansible-playbook -i "${{ steps.tf_apply.outputs.instance_ip }}," --private-key=../terraform/oci_api_key.pem playbook.yml
+          ansible-playbook -i "${{ steps.tf_apply.outputs.instance_ip }}," --private-key=../terraform/oci_api_key.pem --user=ubuntu playbook.yml
 
       # 6. (핵심) FluxCD Bootstrap 실행
       - name: Bootstrap FluxCD
