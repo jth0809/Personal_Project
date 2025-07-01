@@ -1,26 +1,66 @@
 # =================================================================
-# OCI Provider 및 변수 정의
+# Terraform 및 Provider 설정
 # =================================================================
 
-variable "tenancy_ocid" {}
-variable "user_ocid" {}
-variable "fingerprint" {}
-variable "private_key_path" {}
-variable "region" {}
-variable "compartment_ocid" {}
-
-# 이 변수는 이제 필수로 사용됩니다.
-# GitHub Actions Secrets를 통해 주입받을 것입니다.
-variable "ssh_public_key" {}
-
-# 인스턴스 사양을 위한 변수
-variable "instance_ocpus" {
-  description = "Instance OCPU count"
-  default     = 4
+terraform {
+  required_providers {
+    oci = {
+      source  = "oracle/oci"
+      version = ">= 5.0.0"
+    }
+  }
 }
 
+# =================================================================
+# 변수 정의 (입력값)
+# =================================================================
+
+# -- OCI 인증 정보 (민감) --
+variable "tenancy_ocid" {
+  description = "OCI Tenancy's OCID"
+  type        = string
+  sensitive   = true
+}
+variable "user_ocid" {
+  description = "OCI User's OCID"
+  type        = string
+  sensitive   = true
+}
+variable "fingerprint" {
+  description = "API Key's Fingerprint"
+  type        = string
+  sensitive   = true
+}
+variable "private_key_path" {
+  description = "Path to the OCI API private key file"
+  type        = string
+  sensitive   = true
+}
+
+# -- OCI 환경 정보 --
+variable "region" {
+  description = "The OCI region to create resources in"
+  type        = string
+}
+variable "compartment_ocid" {
+  description = "The OCID of the compartment to create resources in"
+  type        = string
+}
+
+# -- 인스턴스 설정 --
+variable "ssh_public_key" {
+  description = "Public SSH key to be used for instance access"
+  type        = string
+  sensitive   = true # 공개키 자체는 민감하지 않지만, 관련된 정보이므로 표시
+}
+variable "instance_ocpus" {
+  description = "Instance OCPU count"
+  type        = number
+  default     = 4
+}
 variable "instance_memory_in_gbs" {
   description = "Instance memory in GB"
+  type        = number
   default     = 24
 }
 

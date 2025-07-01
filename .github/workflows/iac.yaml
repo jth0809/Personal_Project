@@ -28,6 +28,8 @@ jobs:
           TF_VAR_fingerprint: ${{ secrets.OCI_FINGERPRINT }}
           TF_VAR_private_key_path: "oci_api_key.pem"
           TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
+          TF_VAR_compartment_ocid: ${{ secrets.OCI_COMPARTMENT_OCID }}
+          TF_VAR_region: ${{ secrets.OCI_REGION }}
         run: |
           echo "${{ secrets.OCI_PRIVATE_KEY }}" > oci_api_key.pem
           terraform init
