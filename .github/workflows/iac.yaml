@@ -48,11 +48,13 @@ jobs:
           }
           skip_region_validation      = true
           skip_credentials_validation = true
-          force_path_style            = true
+          skip_metadata_api_check     = true
+          skip_requesting_account_id  = true
+          use_path_style              = true
           EOF
 
           terraform init -backend-config=backend.tfbackend
-          
+
           terraform apply -auto-approve -var="ssh_public_key=$SSH_PUBLIC_KEY"
           # Terraform의 출력값(공인 IP)을 GitHub Actions의 출력 변수로 설정합니다.
           echo "instance_ip=$(terraform output -raw instance_public_ip)" >> $GITHUB_OUTPUT
