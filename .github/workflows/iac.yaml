@@ -32,6 +32,8 @@ jobs:
           TF_VAR_region: ${{ secrets.OCI_REGION }}
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > oci_api_key.pem
+          chmod 600 oci_api_key.pem
+          
           SSH_PUBLIC_KEY=$(ssh-keygen -y -f oci_api_key.pem)
 
           terraform init
