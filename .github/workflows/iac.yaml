@@ -31,7 +31,7 @@ jobs:
           TF_VAR_compartment_ocid: ${{ secrets.OCI_COMPARTMENT_OCID }}
           TF_VAR_region: ${{ secrets.OCI_REGION }}
         run: |
-          echo "${{ secrets.OCI_PRIVATE_KEY }}" > oci_api_key.pem
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > oci_api_key.pem
           terraform init
           terraform apply -auto-approve
           # Terraform의 출력값(공인 IP)을 GitHub Actions의 출력 변수로 설정합니다.
