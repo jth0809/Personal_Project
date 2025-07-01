@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import {
   Facebook,
@@ -46,28 +45,6 @@ export default function Footer() {
 
   return (
     <footer className="bg-gray-900 text-white">
-      {/* Newsletter Section */}
-      <div className="border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">
-            <h3 className="text-xl font-bold mb-2">뉴스레터 구독</h3>
-            <p className="text-gray-400 mb-6">
-              신상품 소식과 특별 할인 혜택을 가장 먼저 받아보세요
-            </p>
-            <div className="flex max-w-md mx-auto">
-              <Input
-                type="email"
-                placeholder="이메일 주소를 입력하세요"
-                className="rounded-r-none bg-gray-800 border-gray-700 text-white placeholder-gray-400"
-              />
-              <Button className="rounded-l-none bg-blue-600 hover:bg-blue-700">
-                구독하기
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">

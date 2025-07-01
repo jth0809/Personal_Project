@@ -452,6 +452,43 @@ export const recommendedProducts: Omit<
   },
 ];
 
+// 특별 상품 (Featured Products용)
+export const featuredProducts: Product[] = [
+  {
+    ...sampleProducts[0], // 프리미엄 에코백
+    tags: ["베스트셀러", "친환경", "특가"],
+  },
+  {
+    ...sampleProducts[8], // 스테인리스 텀블러
+    tags: ["베스트셀러", "친환경", "한정판"],
+  },
+  {
+    ...sampleProducts[10], // 미니멀 시계
+    tags: ["신상품", "프리미엄", "추천"],
+  },
+];
+
+// 타입별 상품 개수
+export const getProductCountByType = () => {
+  let bestCount = 0;
+  let newCount = 0;
+  let saleCount = 0;
+
+  sampleProducts.forEach((product) => {
+    if (product.tags?.includes("베스트셀러")) bestCount++;
+    if (product.tags?.includes("신상품")) newCount++;
+    if (product.originalPrice && product.originalPrice > product.price)
+      saleCount++;
+  });
+
+  return {
+    all: sampleProducts.length,
+    best: bestCount,
+    new: newCount,
+    sale: saleCount,
+  };
+};
+
 // 상품 관련 유틸리티 함수들
 export const getProductById = (id: string): Product | undefined => {
   return sampleProducts.find((product) => product.id === id);

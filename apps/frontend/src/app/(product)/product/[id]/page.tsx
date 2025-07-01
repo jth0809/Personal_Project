@@ -308,12 +308,13 @@ export default function ProductDetail({ params }: ProductDetailProps) {
         {/* Product Details Tabs */}
         <div className="mt-16">
           <Tabs defaultValue="details" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="details">상품 상세</TabsTrigger>
               <TabsTrigger value="reviews">
                 리뷰 ({product.reviews})
               </TabsTrigger>
               <TabsTrigger value="qa">Q&A</TabsTrigger>
+              <TabsTrigger value="shipping">배송 정보</TabsTrigger>
             </TabsList>
             <TabsContent value="details" className="mt-6">
               <Card>
@@ -353,6 +354,129 @@ export default function ProductDetail({ params }: ProductDetailProps) {
                   <p className="text-gray-600">
                     상품 문의 기능은 곧 추가될 예정입니다.
                   </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="shipping" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>배송 정보</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="font-semibold text-lg mb-3">
+                        배송비 안내
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">기본 배송비</span>
+                          <span className="font-medium">무료</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">
+                            제주/도서산간 추가
+                          </span>
+                          <span className="font-medium">3,000원</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">무료배송 조건</span>
+                          <span className="font-medium">30,000원 이상</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="font-semibold text-lg mb-3">배송 기간</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">일반 배송</span>
+                          <span className="font-medium">2-3일</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">당일 배송</span>
+                          <span className="font-medium">
+                            오후 2시 이전 주문시
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">새벽 배송</span>
+                          <span className="font-medium">수도권 한정</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h4 className="font-semibold text-lg mb-3">배송 방법</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="p-4 border rounded-lg">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Truck className="h-5 w-5 text-blue-600" />
+                          <span className="font-medium">일반 택배</span>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          CJ대한통운, 로젠택배 등을 통한 일반 배송
+                        </p>
+                      </div>
+
+                      <div className="p-4 border rounded-lg">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Truck className="h-5 w-5 text-green-600" />
+                          <span className="font-medium">당일 배송</span>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          오후 2시 이전 주문시 당일 배송 가능
+                        </p>
+                      </div>
+
+                      <div className="p-4 border rounded-lg">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Truck className="h-5 w-5 text-purple-600" />
+                          <span className="font-medium">새벽 배송</span>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          수도권 한정, 새벽 6시-8시 배송
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h4 className="font-semibold text-lg mb-3">
+                      배송 주의사항
+                    </h4>
+                    <ul className="space-y-2 text-sm text-gray-600">
+                      <li className="flex items-start space-x-2">
+                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                        <span>
+                          배송지 변경은 상품 준비중일 때만 가능합니다.
+                        </span>
+                      </li>
+                      <li className="flex items-start space-x-2">
+                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                        <span>
+                          제주/도서산간 지역은 추가 배송비가 발생합니다.
+                        </span>
+                      </li>
+                      <li className="flex items-start space-x-2">
+                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                        <span>
+                          천재지변, 물량 증가 등으로 배송이 지연될 수 있습니다.
+                        </span>
+                      </li>
+                      <li className="flex items-start space-x-2">
+                        <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2 flex-shrink-0"></div>
+                        <span>
+                          배송 완료 후 7일 이내 교환/반품이 가능합니다.
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>

@@ -219,13 +219,12 @@ export default function ProductsPage() {
                 }`}
               >
                 {filteredProducts.map((product) => (
-                  <Link key={product.id} href={`/product/${product.id}`}>
-                    <ProductCard
-                      product={product}
-                      onAddToCart={handleAddToCart}
-                      onAddToWishlist={handleAddToWishlist}
-                    />
-                  </Link>
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onAddToCart={handleAddToCart}
+                    onAddToWishlist={handleAddToWishlist}
+                  />
                 ))}
               </div>
             ) : (

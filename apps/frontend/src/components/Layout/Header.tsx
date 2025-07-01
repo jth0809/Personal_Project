@@ -5,16 +5,39 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Heart, Search, User, Menu, X } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  ShoppingCart,
+  Heart,
+  Search,
+  User,
+  Menu,
+  X,
+  LogOut,
+  Settings,
+  Package,
+} from "lucide-react";
+import Image from "next/image";
 
 interface HeaderProps {
   cartItemCount?: number;
   wishlistCount?: number;
+  isLoggedIn?: boolean;
+  userEmail?: string;
 }
 
 export default function Header({
   cartItemCount = 0,
   wishlistCount = 0,
+  isLoggedIn = false,
+  userEmail = "",
 }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -37,6 +60,11 @@ export default function Header({
     }
   };
 
+  const handleLogout = () => {
+    // 로그아웃 로직 구현
+    console.log("로그아웃");
+  };
+
   return (
     <header className="bg-white shadow-sm border-b sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -48,7 +76,13 @@ export default function Header({
               href="/"
               className="text-2xl font-bold text-gray-900 hover:text-blue-600 transition-colors"
             >
-              GOODSSHOP
+              <Image
+                src="/logo.png"
+                alt="GOODSSHOP"
+                width={150}
+                height={150}
+                className="w-10 h-10"
+              />
             </Link>
           </div>
 
@@ -93,24 +127,36 @@ export default function Header({
               <Search className="h-5 w-5" />
             </Button>
 
-            {/* Wishlist */}
-            <Link href="/wishlist">
-              <Button variant="ghost" size="icon" className="relative">
-                <Heart className="h-5 w-5" />
-                {wishlistCount > 0 && (
-                  <Badge
-                    variant="destructive"
-                    className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
-                  >
-                    {wishlistCount > 99 ? "99+" : wishlistCount}
-                  </Badge>
-                )}
-              </Button>
-            </Link>
+            {/* Wishlist - 로그인 상태일 때만 표시 */}
+            {isLoggedIn && (
+              <Link href="/wishlist">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative"
+                  title="위시리스트"
+                >
+                  <Heart className="h-5 w-5" />
+                  {wishlistCount > 0 && (
+                    <Badge
+                      variant="destructive"
+                      className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                    >
+                      {wishlistCount > 99 ? "99+" : wishlistCount}
+                    </Badge>
+                  )}
+                </Button>
+              </Link>
+            )}
 
             {/* Cart */}
             <Link href="/cart">
-              <Button variant="ghost" size="icon" className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative"
+                title="장바구니"
+              >
                 <ShoppingCart className="h-5 w-5" />
                 {cartItemCount > 0 && (
                   <Badge
@@ -123,24 +169,76 @@ export default function Header({
               </Button>
             </Link>
 
-            {/* User Account */}
-            <Link href="/account">
-              <Button variant="ghost" size="icon">
-                <User className="h-5 w-5" />
-              </Button>
-            </Link>
+            {/* User Account - 로그인 상태일 때만 표시 */}
+            {isLoggedIn && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" title="내 계정">
+                    <User className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>내 계정</DropdownMenuLabel>
+                  <DropdownMenuItem className="text-sm text-gray-600">
+                    {userEmail}
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/profile"
+                      className="flex items-center cursor-pointer"
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      <span>프로필</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/wishlist"
+                      className="flex items-center cursor-pointer"
+                    >
+                      <Heart className="mr-2 h-4 w-4" />
+                      <span>위시리스트</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/orders"
+                      className="flex items-center cursor-pointer"
+                    >
+                      <Package className="mr-2 h-4 w-4" />
+                      <span>주문 내역</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link
+                      href="/settings"
+                      className="flex items-center cursor-pointer"
+                    >
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>설정</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="flex items-center cursor-pointer text-red-600"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>로그아웃</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
 
-            {/* Login/Register */}
-            <div className="hidden sm:flex space-x-2">
-              <Link href="/login">
-                <Button variant="outline" size="sm">
+            {/* Login - 로그인 안된 상태일 때만 표시 */}
+            {!isLoggedIn && (
+              <Link href="/auth">
+                <Button variant="default" size="sm" className="hidden sm:block">
                   로그인
                 </Button>
               </Link>
-              <Link href="/register">
-                <Button size="sm">회원가입</Button>
-              </Link>
-            </div>
+            )}
 
             {/* Mobile Menu Button */}
             <Button
@@ -196,18 +294,63 @@ export default function Header({
             </nav>
 
             <div className="mt-4 pt-4 border-t">
-              <div className="flex space-x-2">
-                <Link href="/login" className="flex-1">
-                  <Button variant="outline" size="sm" className="w-full">
-                    로그인
-                  </Button>
-                </Link>
-                <Link href="/register" className="flex-1">
-                  <Button size="sm" className="w-full">
-                    회원가입
-                  </Button>
-                </Link>
-              </div>
+              {!isLoggedIn ? (
+                <div className="space-y-2">
+                  <Link href="/auth">
+                    <Button size="sm" className="w-full">
+                      로그인 / 회원가입
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="px-3 py-2 text-sm text-gray-600 border-b">
+                    {userEmail}
+                  </div>
+                  <Link
+                    href="/profile"
+                    className="flex items-center px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    <span>프로필</span>
+                  </Link>
+                  <Link
+                    href="/wishlist"
+                    className="flex items-center px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Heart className="mr-2 h-4 w-4" />
+                    <span>위시리스트</span>
+                  </Link>
+                  <Link
+                    href="/orders"
+                    className="flex items-center px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Package className="mr-2 h-4 w-4" />
+                    <span>주문 내역</span>
+                  </Link>
+                  <Link
+                    href="/settings"
+                    className="flex items-center px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>설정</span>
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsMenuOpen(false);
+                    }}
+                    className="flex items-center w-full px-3 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>로그아웃</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
