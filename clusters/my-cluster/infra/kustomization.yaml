@@ -2,6 +2,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
+  - cert-manager-namespace.yaml
+  - jetstack-repo.yaml
+  - cert-manager-release.yaml
   - local-path-storage.yaml
   - monitoring-namespace.yaml
   - prometheus-community-repo.yaml
@@ -12,10 +15,6 @@ resources:
   - grafana-ingress-class.yaml
   - grafana-ingress.yaml
   
-
-  - cert-manager-namespace.yaml
-  - jetstack-repo.yaml
-  - cert-manager-release.yaml
   - ingress-nginx-repo.yaml
   - ingress-nginx-release.yaml
   - zerossl-cluster-issuer.yaml
