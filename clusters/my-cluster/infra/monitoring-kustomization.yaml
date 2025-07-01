@@ -12,4 +12,4 @@ spec:
     name: flux-system
   # 핵심 인프라가 먼저 배포되고 그 다음 모니터링이 배포되도록 의존성 설정
   dependsOn:
-    - name: core-infra
+    - name: infra-core
