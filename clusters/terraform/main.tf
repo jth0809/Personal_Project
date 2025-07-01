@@ -1,4 +1,28 @@
 # =================================================================
+# Terraform 및 Provider 설정
+# =================================================================
+
+terraform {
+  backend "s3" {
+    # OCI Object Storage는 S3와 호환되므로 's3' 백엔드를 사용합니다.
+    bucket                      = "tf_state_bucket" # 👈 1. 생성할 버킷 이름
+    key                         = "k0s-cluster/terraform.tfstate" # 상태 파일이 저장될 경로
+    region                      = "ap-chuncheon-1" # 👈 2. 버킷이 생성된 리전
+    endpoint                    = "https://axsvfekd8pf8.compat.objectstorage.ap-chuncheon-1.oraclecloud.com" # 👈 3. 테넌시 네임스페이스로 수정
+    skip_region_validation      = true
+    skip_credentials_validation = true
+    force_path_style            = true
+  }
+
+  required_providers {
+    oci = {
+      source  = "oracle/oci"
+      version = ">= 5.0.0"
+    }
+  }
+}
+
+# =================================================================
 # 변수 정의 (입력값)
 # =================================================================
 
@@ -33,20 +57,6 @@ variable "compartment_ocid" {
   description = "The OCID of the compartment to create resources in"
   type        = string
 }
-variable "object_storage_name" {
-  description = "The OCI object storage name"
-  type        = string
-  default = "tf_state_bucket"
-}
-variable "object_storage_key" {
-  description = "The OCI object storage key"
-  type        = string
-  default = "k0s-cluster/terraform.tfstate"
-}
-variable "object_storage_endpoint" {
-  description = "The OCI object storage endpoint"
-  type        = string
-}
 
 # -- 인스턴스 설정 --
 variable "ssh_public_key" {
@@ -64,31 +74,6 @@ variable "instance_memory_in_gbs" {
   type        = number
   default     = 24
 }
-
-# =================================================================
-# Terraform 및 Provider 설정
-# =================================================================
-
-terraform {
-  backend "s3" {
-    # OCI Object Storage는 S3와 호환되므로 's3' 백엔드를 사용합니다.
-    bucket                      = var.object_storage_name # 생성할 버킷 이름
-    key                         = var.object_storage_key # 상태 파일이 저장될 경로
-    region                      = var.region # 버킷이 생성된 리전
-    endpoint                    = var.object_storage_endpoint# 테넌시 네임스페이스로 수정
-    skip_region_validation      = true
-    skip_credentials_validation = true
-    force_path_style            = true
-  }
-
-  required_providers {
-    oci = {
-      source  = "oracle/oci"
-      version = ">= 5.0.0"
-    }
-  }
-}
-
 
 # OCI 접속을 위한 Provider 설정
 provider "oci" {
