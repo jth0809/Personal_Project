@@ -51,6 +51,7 @@ jobs:
           skip_metadata_api_check     = true
           skip_requesting_account_id  = true
           use_path_style              = true
+          signature_version           = "v4"
           EOF
 
           terraform init -backend-config=backend.tfbackend
