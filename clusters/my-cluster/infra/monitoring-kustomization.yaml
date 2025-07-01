@@ -1,4 +1,3 @@
-# clusters/my-cluster/infra/kustomization.yaml
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
@@ -6,14 +5,11 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m0s
-  path: ./clusters/my-cluster/infra
+  path: ./clusters/my-cluster/infra/monitoring
   prune: true
   sourceRef:
     kind: GitRepository
     name: flux-system
   # 핵심 인프라가 먼저 배포되고 그 다음 모니터링이 배포되도록 의존성 설정
   dependsOn:
-    - name: core-infra # '01-core-infra' Kustomization이 먼저 배포되도록
-  resources:
-    - ./core-infra # 핵심 인프라 Kustomization을 참조
-    - ./monitoring # 모니터링 Kustomization을 참조 (core-infra 이후에 적용)
+    - name: core-infra

@@ -6,14 +6,11 @@ metadata:
   namespace: flux-system
 spec:
   interval: 5m0s
-  path: ./clusters/my-cluster/infra/monitoring/loki-stack
+  path: ./clusters/my-cluster/infra/monitoring/loki-stack/base
   prune: true
   sourceRef:
     kind: GitRepository
     name: flux-system
-  resources:
-    - promtail-release.yaml
-    - loki-stack-release.yaml
   healthChecks:
     - apiVersion: apps/v1
       kind: Deployment

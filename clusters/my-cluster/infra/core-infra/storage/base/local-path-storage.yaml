@@ -58,7 +58,7 @@ spec:
       serviceAccountName: openebs-maya-operator
       containers:
         - name: openebs-localpv-provisioner
-          image: openebs/provisioner-localpv:3.3.0
+          image: openebs/provisioner-localpv:4.3.2
           env:
             - name: NODE_NAME
               valueFrom:
@@ -70,6 +70,13 @@ spec:
               value: openebs-maya-operator
             - name: OPENEBS_IO_BASE_PATH
               value: /var/openebs/local
+          resources: # <--- 이 부분을 추가해야 합니다.
+            requests:
+              memory: "100Mi" # 최소 메모리 요청
+              cpu: "50m"      # 최소 CPU 요청 (50 millicores = 0.05 CPU 코어)
+            limits:
+              memory: "200Mi" # 최대 메모리 사용 제한
+              cpu: "100m"     # 최대 CPU 사용 제한
           volumeMounts:
             - mountPath: /var/openebs/local
               name: openebs-hostpath

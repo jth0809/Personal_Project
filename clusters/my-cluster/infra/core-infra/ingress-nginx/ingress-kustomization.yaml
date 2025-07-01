@@ -6,14 +6,11 @@ metadata:
   namespace: flux-system
 spec:
   interval: 5m0s
-  path: ./clusters/my-cluster/infra/core-infra/ingress-nginx
+  path: ./clusters/my-cluster/infra/core-infra/ingress-nginx/base
   prune: true
   sourceRef:
     kind: GitRepository
     name: flux-system
-  resources:
-    - ingress-nginx-repo.yaml
-    - ingress-nginx-release.yaml
   healthChecks:
     - apiVersion: apps/v1
       kind: Deployment

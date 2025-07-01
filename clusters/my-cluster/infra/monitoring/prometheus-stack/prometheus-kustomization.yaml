@@ -6,18 +6,11 @@ metadata:
   namespace: flux-system
 spec:
   interval: 5m0s
-  path: ./clusters/my-cluster/infra/monitoring/prometheus-stack
+  path: ./clusters/my-cluster/infra/monitoring/prometheus-stack/base
   prune: true
   sourceRef:
     kind: GitRepository
     name: flux-system
-  resources:
-    - monitoring-namespace.yaml
-    - prometheus-community-repo.yaml
-    - grafana-repo.yaml
-    - prometheus-stack-release.yaml
-    - grafana-ingress-class.yaml
-    - grafana-ingress.yaml
   healthChecks:
     - apiVersion: apps/v1
       kind: Deployment

@@ -6,16 +6,11 @@ metadata:
   namespace: flux-system
 spec:
   interval: 5m0s
-  path: ./clusters/my-cluster/infra/core-infra/cert-manager
+  path: ./clusters/my-cluster/infra/core-infra/cert-manager/base
   prune: true
   sourceRef:
     kind: GitRepository
     name: flux-system
-  resources:
-    - cert-manager-namespace.yaml
-    - jetstack-repo.yaml
-    - cert-manager-release.yaml
-    - zerossl-cluster-issuer.yaml
   healthChecks:
     - apiVersion: apps/v1
       kind: Deployment
