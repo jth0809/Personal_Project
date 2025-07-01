@@ -49,13 +49,7 @@
         mode: '0755' # 다운로드와 동시에 실행 권한을 부여합니다.
       args:
         creates: /usr/local/bin/k0s
-
-    - name: Ensure k0s binary is executable
-      file:
-        path: /usr/local/bin/k0s
-        mode: 'a+x'
-        state: file
-
+        
     - name: Install k0s controller as a service
       shell: k0s install controller --single
       args:
