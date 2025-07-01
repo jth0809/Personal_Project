@@ -43,21 +43,23 @@
     # 5. k0s 클러스터 설치 및 실행
     # -----------------------------------------------------------------
     - name: Ensure k0s is reset before installation (important for idempotency)
-      # k0s 바이너리가 /usr/local/bin에 설치되므로 절대 경로를 사용합니다.
       command: /usr/local/bin/k0s reset --force
-      ignore_errors: true # k0s가 설치되지 않았거나 실행 중이 아닐 경우 reset이 실패할 수 있으므로 오류를 무시합니다.
-      when: ansible_check_mode is not defined # check_mode에서는 실행하지 않습니다.
+      ignore_errors: true # Reset might fail if k0s is not installed or running, so ignore errors
+      when: ansible_check_mode is not defined # Don't run in check mode
 
     - name: Install k0s using the official script
       shell: "curl -sSLf https://get.k0s.sh | sh"
       args:
-        # 이 인수가 k0s 바이너리가 이미 존재하면, 이 작업을 건너뛰도록 하여
-        # 멱등성을 보장합니다.
         creates: /usr/local/bin/k0s
 
+    - name: Check if k0scontroller service file exists
+      stat:
+        path: /etc/systemd/system/k0scontroller.service
+      register: k0s_service_file
+
     - name: Install k0s controller as a service
-      # k0s 바이너리가 /usr/local/bin에 설치되므로 절대 경로를 사용합니다.
       command: /usr/local/bin/k0s install controller --single
+      when: not k0s_service_file.stat.exists # Only run if the service file does NOT exist
 
     - name: Start and enable k0s service
       systemd:
