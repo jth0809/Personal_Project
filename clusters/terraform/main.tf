@@ -3,6 +3,17 @@
 # =================================================================
 
 terraform {
+  backend "s3" {
+    # OCI Object Storage는 S3와 호환되므로 's3' 백엔드를 사용합니다.
+    bucket                      = var.object_storage_name # 생성할 버킷 이름
+    key                         = var.object_storage_key # 상태 파일이 저장될 경로
+    region                      = var.region # 버킷이 생성된 리전
+    endpoint                    = var.object_storage_endpoint# 테넌시 네임스페이스로 수정
+    skip_region_validation      = true
+    skip_credentials_validation = true
+    force_path_style            = true
+  }
+
   required_providers {
     oci = {
       source  = "oracle/oci"
@@ -44,6 +55,20 @@ variable "region" {
 }
 variable "compartment_ocid" {
   description = "The OCID of the compartment to create resources in"
+  type        = string
+}
+variable "object_storage_name" {
+  description = "The OCI object storage name"
+  type        = string
+  default = "tf_state_bucket"
+}
+variable "object_storage_key" {
+  description = "The OCI object storage key"
+  type        = string
+  default = "k0s-cluster/terraform.tfstate"
+}
+variable "object_storage_endpoint" {
+  description = "The OCI object storage endpoint"
   type        = string
 }
 

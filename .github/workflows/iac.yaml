@@ -30,6 +30,7 @@ jobs:
           #TF_VAR_ssh_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
           TF_VAR_compartment_ocid: ${{ secrets.OCI_COMPARTMENT_OCID }}
           TF_VAR_region: ${{ secrets.OCI_REGION }}
+          TF_VAR_object_storage_endpoint: ${{ secrets.OCI_OBJECT_STORAGE_ENDPOINT }}
         run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > oci_api_key.pem
           chmod 600 oci_api_key.pem
