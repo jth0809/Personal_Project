@@ -57,7 +57,12 @@ jobs:
         env:
           ANSIBLE_HOST_KEY_CHECKING: "False"
         run: |
-          ansible-playbook -i "${{ steps.tf_apply.outputs.instance_ip }}," --private-key=../terraform/oci_api_key.pem --user=ubuntu playbook.yml
+          ansible-playbook \
+            -i "${{ steps.tf_apply.outputs.instance_ip }}," \
+            --private-key=../terraform/private_key.pem \
+            --user=ubuntu \
+            --extra-vars "ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ServerAliveInterval=60'" \
+            playbook.yml
 
       # 6. (핵심) FluxCD Bootstrap 실행
       - name: Bootstrap FluxCD
