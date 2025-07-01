@@ -77,4 +77,4 @@ jobs:
           chmod 600 ssh_key.pem
 
           # 새로 만들어진 서버에 SSH로 접속하여 kubeconfig 파일을 가져옵니다.
-          ssh -i ssh_key.pem -o StrictHostKeyChecking=no ubuntu@140.245.78.55 "export GITHUB_TOKEN={{ GITHUB_TOKEN }}; flux bootstrap github --token-auth --owner=jth0809 --repository=jth0809/Personal_Project --branch=main --path=./clusters/my-cluster --personal"
+          ssh -i ssh_key.pem -o StrictHostKeyChecking=no ubuntu@${{ steps.tf_apply.outputs.instance_ip }} "export GITHUB_TOKEN=${{ secrets.FLUX_GITHUB_TOKEN }}; flux bootstrap github --token-auth --owner=${{ github.repository_owner }} --repository=jth0809/Personal_Project --branch=main --path=./clusters/my-cluster --personal"
