@@ -3,7 +3,7 @@
 # =================================================================
 
 terraform {
-  backend "s3" {}
+  backend "oci" {}
 
   required_providers {
     oci = {
