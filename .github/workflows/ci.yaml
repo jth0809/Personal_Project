@@ -106,7 +106,7 @@ jobs:
           cd gitops
 
           # 2. yq 설치 (YAML 수정을 위한 강력한 도구)
-          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_arm64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
+          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
           
           # 3. 배포 파일의 이미지 태그 수정
           DEPLOYMENT_FILE="./clusters/my-cluster/apps/${{ matrix.app }}.yaml"
