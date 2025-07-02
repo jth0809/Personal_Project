@@ -36,7 +36,7 @@ spec:
         
         # 그 외의 모든 경로는 프론트엔드 서비스로 연결합니다.
         - path: /()(.*)
-          pathType: ImplementationSpecific
+          pathType: Prefix
           backend:
             service:
               # 이전에 만든 프론트엔드 서비스의 이름을 정확히 기입합니다.
