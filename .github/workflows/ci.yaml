@@ -67,16 +67,56 @@ jobs:
         if: steps.check_changes.outputs.changed == 'true'
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push Docker image for ${{ matrix.app }}
+      - name: Extract metadata for Docker
+        id: meta
+        if: steps.check_changes.outputs.changed == 'true'
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/${{ matrix.app }}
+          # 👇 핵심 수정: :latest 태그를 자동으로 생성하지 않도록 설정합니다.
+          flavor: |
+            latest=false
+          # Git 커밋 해시의 앞 7자리를 태그로 사용합니다.
+          tags: |
+            type=sha,prefix=,format=short
+
+      - name: Build and push Docker image
         if: steps.check_changes.outputs.changed == 'true'
         uses: docker/build-push-action@v6
         with:
-          # 각 앱에 맞는 빌드 컨텍스트를 지정합니다.
           context: ${{ matrix.app == 'backend' && './apps/backend' || '.' }}
           file: ./apps/${{ matrix.app }}/Dockerfile
-          # main 브랜치에 push 될 때만 실제로 이미지를 푸시합니다.
-          push: ${{ github.event_name == 'push' }}
-          tags: ghcr.io/${{ steps.string-utils.outputs.lowercase }}/${{ matrix.app }}:latest
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # 👇 --- GitOps 레포지토리 자동 업데이트 단계 --- 👇
+      - name: Update Kubernetes deployment manifest
+        if: steps.check_changes.outputs.changed == 'true'
+        env:
+          GITOPS_REPO: ${{ github.repository_owner }}/Personal_Project # 👈 설정 레포지토리 이름
+          GITOPS_PAT: ${{ secrets.GITOPS_PAT }}
+          IMAGE_TAG: ${{ steps.meta.outputs.version }} # metadata-action이 생성한 태그 (예: a1b2c3d)
+        run: |
+          # 1. 설정 레포지토리 클론
+          git clone https://x-access-token:${GITOPS_PAT}@github.com/${GITOPS_REPO}.git gitops
+          cd gitops
+
+          # 2. yq 설치 (YAML 수정을 위한 강력한 도구)
+          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_arm64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
+          
+          # 3. 배포 파일의 이미지 태그 수정
+          DEPLOYMENT_FILE="./clusters/my-cluster/apps/${{ matrix.app }}.yaml"
+          NEW_IMAGE="ghcr.io/${{ github.repository_owner }}/personal_project/${{ matrix.app }}:${IMAGE_TAG}"
+          yq -i ".spec.template.spec.containers[0].image = \"${NEW_IMAGE}\"" $DEPLOYMENT_FILE
+          
+          # 4. 변경사항 커밋 및 푸시
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add $DEPLOYMENT_FILE
+          git commit -m "ci: Update ${{ matrix.app }} image to tag ${IMAGE_TAG}"
+          git push
+
