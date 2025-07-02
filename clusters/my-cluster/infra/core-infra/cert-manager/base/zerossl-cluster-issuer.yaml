@@ -9,7 +9,7 @@ spec:
     privateKeySecretRef:
       name: zerossl-prod-private-key
     externalAccountBinding:
-      keyID: nEYmB15HKxhatraO2PbN5g
+      keyID: 5bYLELYfe65JlzoVDyHBMw
       keySecretRef:
         name: zerossl-hmac-secret
         key: hmacKey
