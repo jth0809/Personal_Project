@@ -13,6 +13,7 @@ metadata:
     cert-manager.io/cluster-issuer: "zerossl-prod"
     nginx.ingress.kubernetes.io/limit-rps: "5" # 초당 10개 요청으로 제한
     nginx.ingress.kubernetes.io/limit-rpm: "500" # 분당 500개 요청으로 제한
+    nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   # TLS(SSL) 설정을 추가하여 HTTPS를 활성화합니다.
   tls:
