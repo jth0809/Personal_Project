@@ -27,7 +27,7 @@ spec:
     http:
       paths:
       - path: /
-        pathType: Prefix
+        pathType: ImplementationSpecific
         backend:
           service:
             # kube-prometheus-stack이 생성한 그라파나 서비스의 이름입니다.
