@@ -8,6 +8,8 @@ spec:
   interval: 5m0s
   path: ./clusters/my-cluster/infra/monitoring/loki-stack/base
   prune: true
+  dependsOn:
+    - name: prometheus-stack-infra
   sourceRef:
     kind: GitRepository
     name: flux-system
