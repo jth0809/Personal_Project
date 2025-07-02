@@ -8,8 +8,6 @@ metadata:
     kubernetes.io/ingress.class: "nginx"
     nginx.ingress.kubernetes.io/rewrite-target: /$2
     cert-manager.io/cluster-issuer: "zerossl-prod"
-    nginx.ingress.kubernetes.io/limit-rps: "5" # 초당 10개 요청으로 제한
-    nginx.ingress.kubernetes.io/limit-rpm: "500" # 분당 500개 요청으로 제한
 spec:
   tls:
       - hosts:
