@@ -10,7 +10,7 @@ export const useAuthStore = create<AuthStore>()(
       isAuthenticated: false,
       isLoading: false,
       token: null,
-
+      // 빌드 테스트 위해 파일이 다른척 하는 부분
       // Actions
       login: async (email: string) => {
         set({ isLoading: true });
