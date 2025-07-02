@@ -19,8 +19,7 @@ spec:
         - name: ghcr-secret
       containers:
         - name: frontend
-          # 🚨 중요: GitHub Actions가 빌드한 이미지 주소를 정확히 기입합니다.
-          image: ghcr.io/jth0809/personal_project/frontend:latest
+          image: ghcr.io/jth0809/personal_project/frontend@sha256:3d6407d77d8fd7d3463bcbf5dab0ff77bed30facf2c842e3c06adc70767393de
           ports:
             - containerPort: 3000
           resources:
