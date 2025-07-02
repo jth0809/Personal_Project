@@ -27,7 +27,7 @@ spec:
   values:
     controller:
       config:
-        use-regex: "true"
+        strict-validate-path-type: "false"
       # Controller를 DaemonSet으로 배포하여 모든 노드에 하나씩 실행합니다.
       kind: DaemonSet
       # HostPort를 사용하므로 별도의 LoadBalancer/NodePort 서비스는 비활성화합니다.
