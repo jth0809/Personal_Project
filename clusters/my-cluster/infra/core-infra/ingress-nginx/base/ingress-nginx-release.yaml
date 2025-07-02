@@ -26,6 +26,8 @@ spec:
   # 로드밸런서 없는 환경을 위해 HostPort 모드로 설정합니다.
   values:
     controller:
+      config:
+        use-regex: "true"
       # Controller를 DaemonSet으로 배포하여 모든 노드에 하나씩 실행합니다.
       kind: DaemonSet
       # HostPort를 사용하므로 별도의 LoadBalancer/NodePort 서비스는 비활성화합니다.
