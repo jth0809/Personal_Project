@@ -74,7 +74,7 @@
   <img src="img/cd.PNG" alt="배포 아키텍처" width="80%"/>
 </p>
 <p align="center">
-  <img src="img/service" alt="시스템 아키텍처" width="80%"/>
+  <img src="img/service.PNG" alt="시스템 아키텍처" width="80%"/>
 </p>
 
 ### 시스템 구성 및 설계 의도
