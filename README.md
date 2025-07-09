@@ -3,7 +3,9 @@
 **Kubernetes를 기반으로 지금까지 배운 내용을 정리하며 향후 MSA 및 MLOps 적용을 목표로 확장해나가는 개인 프로젝트입니다.**
 
 <br/>
-
+<p align="center">
+  <img src="img/work.gif" alt="프로젝트 데모 GIF" width="80%"/>
+</p>
 <p align="center">
   <img src="img/page.PNG" alt="프로젝트 스크린샷" width="80%"/>
 </p>
