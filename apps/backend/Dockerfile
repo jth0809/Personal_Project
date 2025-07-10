@@ -2,7 +2,7 @@
 # 1. 빌드 스테이지 (Builder Stage)
 # =========================================
 # Gradle과 JDK가 포함된 이미지를 빌드 환경으로 사용
-FROM gradle:jdk17-ubi-minimal AS builder
+FROM gradle:jdk21-ubi-minimal AS builder
 
 # 작업 디렉토리 설정
 WORKDIR /app
@@ -28,7 +28,7 @@ RUN ./gradlew build -x test --no-daemon
 # 2. 최종 실행 스테이지 (Runner Stage)
 # =========================================
 # JDK가 아닌 JRE(Java Runtime Environment)만 포함된 훨씬 가벼운 이미지를 사용
-FROM eclipse-temurin:17-jre-focal
+FROM eclipse-temurin:21-jre-focal
 
 WORKDIR /app
 

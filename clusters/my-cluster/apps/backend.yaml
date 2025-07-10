@@ -26,6 +26,9 @@ spec:
           envFrom:
             - secretRef:
                 name: db-credentials
+            - secretRef:
+                name: jwt-secret
+
           resources:
             requests:
               cpu: "100m"
