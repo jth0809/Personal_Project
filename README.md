@@ -1,6 +1,6 @@
 # Kubernetes 기반 E-Commerce 서비스
 
-**Kubernetes를 기반으로 지금까지 배운 내용을 정리하며 향후 MSA 및 MLOps 적용을 목표로 확장해나가는 개인 프로젝트입니다.**  
+**Kubernetes를 기반으로 지금까지 배운 내용을 정리하며 향후 MSA 및 MLOps 적용을 목표로 확장해나가는 프로젝트입니다.**  
 
 **소개 GIF**
 <br/>
