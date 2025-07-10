@@ -58,7 +58,7 @@ spec:
       serviceAccountName: openebs-maya-operator
       containers:
         - name: openebs-localpv-provisioner
-          image: openebs/provisioner-localpv:4.3.2
+          image: openebs/provisioner-localpv:4.3.0
           env:
             - name: NODE_NAME
               valueFrom:
