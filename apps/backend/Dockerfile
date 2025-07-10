@@ -28,7 +28,7 @@ RUN ./gradlew build -x test --no-daemon
 # 2. 최종 실행 스테이지 (Runner Stage)
 # =========================================
 # JDK가 아닌 JRE(Java Runtime Environment)만 포함된 훨씬 가벼운 이미지를 사용
-FROM eclipse-temurin:21-jre-focal
+FROM eclipse-temurin:21-jre
 
 WORKDIR /app
 
