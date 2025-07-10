@@ -17,18 +17,22 @@ spec:
     spec:
       imagePullSecrets:
         - name: ghcr-secret
+      automountServiceAccountToken: false
       containers:
         - name: backend
           image: ghcr.io/jth0809/personal_project/backend:9118c92
           ports:
             - containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: db-credentials
           resources:
             requests:
               cpu: "100m"
               memory: "128Mi"
             limits:
-              cpu: "1000m"
-              memory: "2048Mi"
+              cpu: "500m"
+              memory: "4096Mi"
 ---
 apiVersion: v1
 kind: Service

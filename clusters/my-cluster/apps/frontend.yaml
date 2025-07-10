@@ -17,6 +17,7 @@ spec:
     spec:
       imagePullSecrets:
         - name: ghcr-secret
+      automountServiceAccountToken: false
       containers:
         - name: frontend
           image: ghcr.io/jth0809/personal_project/frontend@sha256:3d6407d77d8fd7d3463bcbf5dab0ff77bed30facf2c842e3c06adc70767393de
@@ -27,8 +28,8 @@ spec:
               cpu: "100m"
               memory: "128Mi"
             limits:
-              cpu: "1000m"
-              memory: "2048Mi"
+              cpu: "500m"
+              memory: "4096Mi"
 ---
 apiVersion: v1
 kind: Service

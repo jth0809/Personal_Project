@@ -71,7 +71,7 @@ spec:
           cpu: 200m
           memory: 512Mi
         limits:
-          cpu: "1" # 1 core
+          cpu: "500m" # 1 core
           memory: 1Gi
     # Zero out replica counts of other deployment modes
     backend:
