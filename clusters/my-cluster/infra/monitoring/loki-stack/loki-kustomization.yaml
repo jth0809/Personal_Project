@@ -15,10 +15,10 @@ spec:
     name: flux-system
   healthChecks:
     - apiVersion: apps/v1
-      kind: Deployment
+      kind: StatefulSet
       name: loki
       namespace: monitoring
     - apiVersion: apps/v1
       kind: DaemonSet
-      name: promtail
+      name: promtail 
       namespace: monitoring
