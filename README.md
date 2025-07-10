@@ -1,9 +1,12 @@
 # Kubernetes 기반 E-Commerce 서비스
 
-**Kubernetes를 기반으로 지금까지 배운 내용을 정리하며 향후 MSA 및 MLOps 적용을 목표로 확장해나가는 개인 프로젝트입니다.**
+**Kubernetes를 기반으로 지금까지 배운 내용을 정리하며 향후 MSA 및 MLOps 적용을 목표로 확장해나가는 프로젝트입니다.**  
 
+**소개 GIF**
 <br/>
-
+<p align="center">
+  <img src="img/work.gif" alt="프로젝트 데모 GIF" width="80%"/>
+</p>
 <p align="center">
   <img src="img/page.PNG" alt="프로젝트 스크린샷" width="80%"/>
 </p>
@@ -30,6 +33,7 @@
 ## 1. 프로젝트 개요 (Overview)
 
 -   **개발 기간**: 2025.06.27 ~ 진행 중
+-   **개발 인원**: 2명 (FE 1명, BE 1명)
 -   **주요 목표**:
     - Kubernetes(k0s) 환경에서의 애플리케이션 배포 및 운영 경험
     - MSA 전환을 고려한 확장 가능한 모놀리식 아키텍처 설계 능력 향상
