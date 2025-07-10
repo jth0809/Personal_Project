@@ -5,7 +5,7 @@ metadata:
   name: prometheus-stack-infra
   namespace: flux-system
 spec:
-  interval: 30m
+  interval: 5m
   path: ./clusters/my-cluster/infra/monitoring/prometheus-stack/base
   prune: true
   sourceRef:
