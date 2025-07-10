@@ -20,7 +20,7 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: backend
-          image: ghcr.io/jth0809/personal_project/backend:9118c92
+          image: ghcr.io/jth0809/personal_project/backend:58b9462
           ports:
             - containerPort: 8080
           envFrom:
@@ -28,7 +28,6 @@ spec:
                 name: db-credentials
             - secretRef:
                 name: jwt-secret
-
           resources:
             requests:
               cpu: "100m"
