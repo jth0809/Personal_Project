@@ -19,7 +19,13 @@ spec:
           # 인증서를 발급받을 도메인 이름
           - jjangyushop.kro.kr # 👈 본인의 도메인으로 변경
         # 인증서가 저장될 Secret의 이름 (cert-manager가 자동으로 생성해 줌)
-        secretName: myapp-com-tls 
+        secretName: myapp-com-tls
+        
+      - hosts:
+        # 그라파나에 접속할 주소입니다.
+        - grafana.jjangyushop.kro.kr
+        # 인증서가 저장될 Secret의 이름입니다. (cert-manager가 자동 생성)
+        secretName: grafana-tls-secret
   rules:
   - host: jjangyushop.kro.kr
     http:
@@ -49,3 +55,15 @@ spec:
               name: frontend-svc
               port:
                 number: 80
+  - host: grafana.jjangyushop.kro.kr
+    http:
+      paths:
+      - path: /
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            # kube-prometheus-stack이 생성한 그라파나 서비스의 이름입니다.
+            name: kube-prometheus-stack-grafana
+            port:
+              # 그라파나 서비스가 사용하는 포트입니다.
+              number: 80
