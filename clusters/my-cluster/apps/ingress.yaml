@@ -10,8 +10,9 @@ metadata:
     cert-manager.io/cluster-issuer: "zerossl-prod"
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     nginx.ingress.kubernetes.io/x-forwarded-proto: "https"
-    nginx.ingress.kubernetes.io/limit-rps: "5" # 초당 10개 요청으로 제한
-    nginx.ingress.kubernetes.io/limit-rpm: "500" # 분당 500개 요청으로 제한
+    nginx.ingress.kubernetes.io/limit-rps: "10" # 초당 10개 요청으로 제한
+    nginx.ingress.kubernetes.io/limit-rpm: "600" # 분당 600개 요청으로 제한
+    nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   tls:
       - hosts:
@@ -23,17 +24,22 @@ spec:
   - host: jjangyushop.kro.kr
     http:
       paths:
-        # '/api' 로 시작하는 모든 경로는 백엔드 서비스로 연결합니다.
-        # (.*)는 /api/ 뒤에 오는 모든 문자열을 캡처합니다.
-       # - path: /api(/|$)(.*)
-       #   pathType: Prefix
-       #   backend:
-       #     service:
-       #       # 이전에 만든 백엔드 서비스의 이름을 정확히 기입합니다.
-       #       name: backend-svc
-       #       port:
-       #         number: 80
-        
+        - path: /api(/|$)(.*)
+          pathType: Prefix
+          backend:
+            service:
+              # 이전에 만든 백엔드 서비스의 이름을 정확히 기입합니다.
+              name: backend-svc
+              port:
+                number: 80
+        - path: /swagger-ui
+          pathType: Prefix
+          backend:
+            service:
+              # 이전에 만든 백엔드 서비스의 이름을 정확히 기입합니다.
+              name: backend-svc
+              port:
+                number: 80
         # 그 외의 모든 경로는 프론트엔드 서비스로 연결합니다.
         - path: /()(.*)
           pathType: Prefix
