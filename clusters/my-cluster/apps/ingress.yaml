@@ -20,7 +20,7 @@ spec:
           - jjangyushop.kro.kr # 👈 본인의 도메인으로 변경
         # 인증서가 저장될 Secret의 이름 (cert-manager가 자동으로 생성해 줌)
         secretName: myapp-com-tls
-        
+
       - hosts:
         # 그라파나에 접속할 주소입니다.
         - grafana.jjangyushop.kro.kr
@@ -64,6 +64,7 @@ spec:
           service:
             # kube-prometheus-stack이 생성한 그라파나 서비스의 이름입니다.
             name: kube-prometheus-stack-grafana
+            namespace: monitoring
             port:
               # 그라파나 서비스가 사용하는 포트입니다.
               number: 80
