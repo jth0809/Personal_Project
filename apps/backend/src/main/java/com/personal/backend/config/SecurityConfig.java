@@ -53,8 +53,6 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         // "GET /api/products/**" (상품 조회) 경로는 누구나 접근 가능
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/swagger-ui.html").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/swagger-ui/**").permitAll()
                         // 그 외의 모든 요청은 반드시 인증(로그인)된 사용자만 접근 가능
                         .anyRequest().authenticated()
                 )
