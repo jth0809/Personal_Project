@@ -20,7 +20,7 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: backend
-          image: ghcr.io/jth0809/personal_project/backend:135bd9d
+          image: ghcr.io/jth0809/personal_project/backend:29d0ece
           ports:
             - containerPort: 8080
           envFrom:
