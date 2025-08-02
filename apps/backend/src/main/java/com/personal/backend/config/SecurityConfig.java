@@ -50,11 +50,11 @@ public class SecurityConfig {
                 // 3. 각 URL 경로별로 접근 권한을 설정합니다.
                 .authorizeHttpRequests(authz -> authz
                         // "/api/auth/**" (로그인, 회원가입) 경로는 누구나 접근 가능
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/**").permitAll()
                         // "GET /api/products/**" (상품 조회) 경로는 누구나 접근 가능
-                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/swagger-ui.html").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/swagger-ui/**").permitAll()
+                        //.requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                        //.requestMatchers(HttpMethod.GET, "/swagger-ui.html").permitAll()
+                        //.requestMatchers(HttpMethod.GET, "/swagger-ui/**").permitAll()
                         // 그 외의 모든 요청은 반드시 인증(로그인)된 사용자만 접근 가능
                         .anyRequest().authenticated()
                 )
