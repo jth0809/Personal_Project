@@ -32,7 +32,7 @@ spec:
               name: backend-svc
               port:
                 number: 80
-        - path: /swagger-ui
+        - path: /()(swagger-ui.*)
           pathType: Prefix
           backend:
             service:
