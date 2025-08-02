@@ -2,6 +2,8 @@ package com.personal.backend.exception;
 
 import com.personal.backend.dto.ErrorResponse;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -9,6 +11,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 // @RestControllerAdvice: 모든 @RestController에서 발생하는 예외를 이 클래스가 처리하도록 합니다.
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     /**
@@ -44,7 +47,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception ex) {
         // 실제 운영 환경에서는 로그를 남기는 것이 매우 중요합니다.
-        // log.error("Internal Server Error", ex);
+        log.error("Internal Server Error", ex);
         ErrorResponse response = ErrorResponse.of("INTERNAL_SERVER_ERROR", "서버 내부 오류가 발생했습니다.");
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
