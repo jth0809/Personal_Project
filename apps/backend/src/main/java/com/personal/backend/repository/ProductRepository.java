@@ -12,4 +12,5 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     // "이름에 특정 키워드가 포함된 상품들을 찾아라"는 SQL을 자동으로 생성해 줍니다.
     List<Product> findByNameContaining(String keyword);
     List<Product> findByCategoryId(Long categoryId);
+    List<Product> findByName(String name);
 }
