@@ -11,16 +11,11 @@ spec:
     spec:
       containers:
       - name: data-seeder
-        image: ghcr.io/jth0809/personal_project/backend:latest
+        image: ghcr.io/jth0809/personal_project/backend:d9209db
         args: ["--init-data"]
         envFrom:
             - secretRef:
                 name: db-credentials
             - secretRef:
                 name: jwt-secret
-        env:
-          - name: SPRING_PROFILES_ACTIVE
-            value: "prod"
-          - name: SPRING_MAIN_WEB_APPLICATION_TYPE
-            value: "SERVLET"
       restartPolicy: OnFailure
