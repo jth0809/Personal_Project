@@ -4,6 +4,7 @@ import com.personal.backend.domain.Category;
 import com.personal.backend.domain.Product;
 import com.personal.backend.domain.User;
 import com.personal.backend.domain.UserRole;
+import com.personal.backend.repository.CategoryRepository;
 import com.personal.backend.repository.ProductRepository;
 import com.personal.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
     private final PasswordEncoder passwordEncoder;
     private final Dataproperties dataproperties;
 
@@ -48,8 +50,10 @@ public class DataInitializer implements CommandLineRunner {
             }
 
             if (productRepository.findByName("고성능 노트북").isEmpty()) {
-                productRepository.save(new Product("고성능 노트북", "최신 M4 칩이 탑재된 노트북입니다.", 1500000, "",new Category("컴퓨터")));
-                productRepository.save(new Product("기계식 키보드", "타건감이 뛰어난 기계식 키보드입니다.", 120000, "",new Category("컴퓨터")));
+                Category computerCategory = categoryRepository.findByName("컴퓨터")
+                        .orElseGet(() -> categoryRepository.save(new Category("컴퓨터")));
+                productRepository.save(new Product("고성능 노트북", "최신 M4 칩이 탑재된 노트북입니다.", 1500000, "",computerCategory));
+                productRepository.save(new Product("기계식 키보드", "타건감이 뛰어난 기계식 키보드입니다.", 120000, "",computerCategory));
                 log.info("Product data created.");
             }
             

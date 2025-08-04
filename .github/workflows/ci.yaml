@@ -112,7 +112,8 @@ jobs:
           DEPLOYMENT_FILE="./clusters/my-cluster/apps/${{ matrix.app }}.yaml"
           NEW_IMAGE="ghcr.io/${{ github.repository_owner }}/personal_project/${{ matrix.app }}:${IMAGE_TAG}"
           yq -i '(select(.kind == "Deployment") | .spec.template.spec.containers[0].image) = "'${NEW_IMAGE}'"' $DEPLOYMENT_FILE
-          
+          yq -i '(select(.kind == "Job") | .spec.template.spec.containers[0].image) = "'${NEW_IMAGE}'"' $DEPLOYMENT_FILE
+
           # 4. 변경사항 커밋 및 푸시
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
