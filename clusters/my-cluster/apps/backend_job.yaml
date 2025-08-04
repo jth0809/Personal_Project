@@ -3,6 +3,7 @@ kind: Job
 metadata:
   # 잡의 이름 (매번 실행 시 고유해야 할 경우 'data-seed-job-{{ a-random-string }}' 처럼 사용)
   name: data-seed-job
+  namespace: default
 spec:
   # 성공할 때까지 재시도하는 횟수
   backoffLimit: 2
