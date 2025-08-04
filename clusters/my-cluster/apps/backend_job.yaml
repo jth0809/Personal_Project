@@ -18,4 +18,9 @@ spec:
                 name: db-credentials
             - secretRef:
                 name: jwt-secret
+        env:
+          - name: SPRING_PROFILES_ACTIVE
+            value: "prod"
+          - name: SPRING_MAIN_WEB_APPLICATION_TYPE
+            value: "SERVLET"
       restartPolicy: OnFailure
