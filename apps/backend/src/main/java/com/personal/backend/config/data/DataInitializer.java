@@ -37,9 +37,9 @@ public class DataInitializer implements CommandLineRunner {
             log.info("Command line argument '--init-data' detected. Starting data initialization...");
 
             // 2. 멱등성을 보장하기 위해 데이터가 없을 때만 삽입합니다.
-            if (userRepository.findByEmail("admin@test.com").isEmpty()) {
+            if (userRepository.findByEmail("test@admin.com").isEmpty()) {
                 userRepository.save(User.builder()
-                        .email("admin@test.com")
+                        .email("test@admin.com")
                         .password(passwordEncoder.encode(dataproperties.password()))
                         .username("관리자")
                         .role(UserRole.ADMIN)
