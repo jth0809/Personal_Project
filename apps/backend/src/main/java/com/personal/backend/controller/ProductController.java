@@ -15,7 +15,7 @@ import java.util.List;
 @Tag(name = "상품 API", description = "상품 생성, 수정, 삭제, 조회, 상세 조회 API")
 @RestController // 이 클래스가 REST API를 위한 컨트롤러임을 선언합니다.
 @RequiredArgsConstructor // final 필드에 대한 생성자를 자동으로 만들어줍니다.
-@RequestMapping("/api/products") // 이 컨트롤러의 모든 API는 "/api/products" 경로로 시작합니다.
+@RequestMapping("/products") // 이 컨트롤러의 모든 API는 "/api/products" 경로로 시작합니다.
 public class ProductController {
 
     private final ProductService productService; // Service 계층에 의존

@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "장바구니 API", description = "장바구니 조회, 추가, 삭제 API")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/cart")
+@RequestMapping("/cart")
 public class CartController {
 
     private final CartService cartService;
