@@ -3,62 +3,100 @@ package com.personal.backend.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.personal.backend.dto.ProductDto;
 import com.personal.backend.service.ProductService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-// 👇 핵심 수정: @WebMvcTest 대신 순수한 Mockito 확장을 사용합니다.
-@ExtendWith(MockitoExtension.class)
+@WebMvcTest(ProductController.class)
 class ProductControllerTest {
 
-    // @Autowired 대신, MockMvc 객체를 직접 생성하여 사용합니다.
+    @Autowired
     private MockMvc mockMvc;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private ObjectMapper objectMapper;
 
-    @Mock // ProductController가 의존하는 ProductService를 가짜(Mock)로 만듭니다.
+    @MockitoBean
     private ProductService productService;
 
-    @InjectMocks // 가짜 ProductService를 실제 ProductController에 주입합니다.
-    private ProductController productController;
+    @Test
+    @WithMockUser
+    @DisplayName("상품 목록 조회 API - 성공 (공개 접근)")
+    void getAllProducts_Success() throws Exception {
+        // given
+        List<ProductDto.Response> productList = List.of(
+            new ProductDto.Response(1L, "상품1", "설명1", 1000, "img1.jpg", "카테고리1"),
+            new ProductDto.Response(2L, "상품2", "설명2", 2000, "img2.jpg", "카테고리2")
+        );
+        when(productService.findProducts(null)).thenReturn(productList);
 
-    @BeforeEach // 각각의 테스트가 실행되기 전에 MockMvc를 설정합니다.
-    void setUp() {
-        // 스프링 컨텍스트 로딩 없이, 컨트롤러 하나만으로 MockMvc를 설정합니다.
-        mockMvc = MockMvcBuilders.standaloneSetup(productController).build();
+        // when & then
+        mockMvc.perform(get("/products"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size()").value(2))
+                .andExpect(jsonPath("$[0].name").value("상품1"));
     }
 
     @Test
-    @DisplayName("관리자 권한으로 상품 생성 API 테스트 - 성공")
-    // 👇 핵심 수정: @WithMockUser는 Spring Security 테스트 컨텍스트가 필요하므로,
-    // 이 방식의 테스트에서는 직접 인증 객체를 설정하거나, 보안 필터를 추가해야 합니다.
-    // 여기서는 간단하게 하기 위해 보안 검증을 생략하고 로직만 테스트합니다.
-    // (보안 테스트는 @SpringBootTest를 사용한 통합 테스트에서 수행하는 것이 더 좋습니다.)
-    void createProductApiTest_ShouldSucceed() throws Exception {
-        // given: 이런 요청 데이터가 주어졌을 때
-        ProductDto.CreateRequest requestDto = new ProductDto.CreateRequest("새 상품", "설명", 20000, "url", 1L);
-        
-        // productService.createProduct 메소드가 호출되면, 임의의 Response DTO를 반환하도록 설정합니다.
-        when(productService.createProduct(any(ProductDto.CreateRequest.class)))
-            .thenReturn(new ProductDto.Response(1L, "새 상품", "설명", 20000, "url", "카테고리"));
+    @WithMockUser(roles = "ADMIN") // 'ADMIN' 역할을 가진 사용자로 요청을 시뮬레이션
+    @DisplayName("상품 생성 API - 성공 (ADMIN 권한)")
+    void createProduct_Success_WithAdminRole() throws Exception {
+        // given
+        ProductDto.CreateRequest request = new ProductDto.CreateRequest("새 상품", "새 설명", 15000, "new.jpg", 1L);
+        ProductDto.Response dummyResponse = new ProductDto.Response(1L, "새 상품", "새 설명", 15000, "new.jpg", "카테고리1");
+        // createProduct는 void를 반환하므로 doNothing() 사용
+        when(productService.createProduct(any(ProductDto.CreateRequest.class))).thenReturn(dummyResponse);
 
-        // when & then: /api/products로 POST 요청을 보내면, 성공(200 OK)할 것이다!
-        mockMvc.perform(post("/api/products")
-                // .with(csrf()) // CSRF는 Spring Security 설정이므로 여기서는 필요 없습니다.
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requestDto)))
-            .andExpect(status().isOk());
+        // when & then
+        mockMvc.perform(post("/products")
+                        .with(csrf()) // POST 요청 시 CSRF 토큰 추가
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("상품 생성 API - 실패 (인증되지 않은 사용자)")
+    void createProduct_Fail_Unauthorized() throws Exception {
+        // given
+        ProductDto.CreateRequest request = new ProductDto.CreateRequest("새 상품", "새 설명", 15000, "new.jpg", 1L);
+        
+        // when & then
+        // @WithMockUser가 없으므로 인증되지 않은 사용자의 요청이 됩니다.
+        // Spring Security는 보통 401 Unauthorized 또는 403 Forbidden을 반환합니다.
+        mockMvc.perform(post("/products")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isUnauthorized());
+    }
+    
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    @DisplayName("상품 삭제 API - 성공 (ADMIN 권한)")
+    void deleteProduct_Success_WithAdminRole() throws Exception {
+        // given
+        Long productId = 1L;
+        doNothing().when(productService).deleteProduct(productId);
+        
+        // when & then
+        mockMvc.perform(delete("/products/{id}", productId)
+                        .with(csrf()))
+                .andExpect(status().isNoContent()); // 204 No Content 확인
     }
 }
