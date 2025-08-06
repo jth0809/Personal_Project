@@ -10,15 +10,15 @@ spec:
   template:
     spec:
       containers:
-      - name: data-seeder
-        image: ghcr.io/jth0809/personal_project/backend:ec7eb6c
-        args: ["--init-data"]
-        envFrom:
+        - name: data-seeder
+          image: ghcr.io/jth0809/personal_project/backend:a206cf9
+          args: ["--init-data"]
+          envFrom:
             - secretRef:
                 name: db-credentials
             - secretRef:
                 name: jwt-secret
-        env:
-          - name: SPRING_MAIN_WEB_APPLICATION_TYPE
-            value: "NONE"
+          env:
+            - name: SPRING_MAIN_WEB_APPLICATION_TYPE
+              value: "NONE"
       restartPolicy: OnFailure
