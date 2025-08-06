@@ -11,7 +11,7 @@ spec:
     spec:
       containers:
         - name: data-seeder
-          image: ghcr.io/jth0809/personal_project/backend:a206cf9
+          image: ghcr.io/jth0809/personal_project/backend:9294364
           args: ["--init-data"]
           envFrom:
             - secretRef:
