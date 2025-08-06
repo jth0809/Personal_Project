@@ -50,14 +50,14 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void createUsers() {
-        if (userRepository.findByEmail("admin@test.com").isEmpty()) {
+        if (userRepository.findByEmail("test@admin.com").isEmpty()) {
             userRepository.save(User.builder()
-                    .email("admin@test.com")
+                    .email("test@admin.com")
                     .password(passwordEncoder.encode(dataproperties.password()))
                     .username("관리자")
                     .role(UserRole.ADMIN)
                     .build());
-            log.info("Admin user created: admin@test.com");
+            log.info("Admin user created: test@admin.com");
         }
 
         if (userRepository.findByEmail("user@test.com").isEmpty()) {

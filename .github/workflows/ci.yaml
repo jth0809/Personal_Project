@@ -119,6 +119,7 @@ jobs:
           git config user.name "GitHub Actions Bot"
           git config user.email "actions@github.com"
           git add $DEPLOYMENT_FILE
+          git add $Job_FILE
           git commit -m "ci: Update ${{ matrix.app }} image to tag ${IMAGE_TAG}"
           git push
 
