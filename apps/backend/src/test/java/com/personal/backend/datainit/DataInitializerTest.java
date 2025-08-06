@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest(args = "--init-data")
 // 3. 테스트가 끝난 후 모든 DB 변경사항을 롤백하여 테스트 환경을 깨끗하게 유지합니다.
 @Transactional
+@ActiveProfiles("test")
 class DataInitializerTest {
 
     @Autowired

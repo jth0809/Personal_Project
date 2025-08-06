@@ -18,6 +18,8 @@ spec:
                 name: db-credentials
             - secretRef:
                 name: jwt-secret
+            - secretRef:
+                name: oci-info
           env:
             - name: SPRING_MAIN_WEB_APPLICATION_TYPE
               value: "NONE"
