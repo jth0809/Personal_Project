@@ -39,8 +39,7 @@ dependencies {
 	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 	testRuntimeOnly 'com.h2database:h2'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
-	implementation 'com.oracle.oci.sdk:oci-java-sdk-objectstorage:3.70.1'
-	implementation 'com.oracle.oci.sdk:oci-java-sdk-common-httpclient-jersey:3.70.1'
+	implementation 'com.oracle.oci.sdk:oci-java-sdk-shaded-full:3.70.1'
 }
 
 tasks.named('test') {
