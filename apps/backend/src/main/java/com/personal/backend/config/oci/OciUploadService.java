@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -23,6 +24,22 @@ public class OciUploadService {
     private final ObjectStorage objectStorageClient;
 
     private final OciProperties ociProperties;
+    public List<ImageDto.UploadInfoResponse> generatePreAuthenticatedUploadUrls(ImageDto.GenerateUploadUrlsRequest request) {
+    return request.fileNames().stream()
+            .map(fileName -> {
+                // 기존의 단일 URL 생성 로직을 재사용
+                ImageDto.GenerateUploadUrlRequest singleRequest = new ImageDto.GenerateUploadUrlRequest(fileName);
+                ImageDto.GenerateUploadUrlResponse singleResponse = generatePreAuthenticatedUploadUrl(singleRequest);
+                
+                // 파일 이름과 URL들을 함께 묶어 반환
+                return new ImageDto.UploadInfoResponse(
+                        fileName,
+                        singleResponse.uploadUrl(),
+                        singleResponse.imageUrl()
+                );
+            })
+            .toList();
+    }
 
     public ImageDto.GenerateUploadUrlResponse generatePreAuthenticatedUploadUrl(ImageDto.GenerateUploadUrlRequest request) {
         // 1. OCI에 저장될 파일 이름 생성 (중복 방지를 위해 UUID 사용)
