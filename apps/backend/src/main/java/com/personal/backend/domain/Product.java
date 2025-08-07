@@ -1,5 +1,6 @@
 package com.personal.backend.domain;
 
+import java.util.ArrayList;
 import java.util.List;
 
 // 👇 1. 'javax.persistence'가 아닌 'jakarta.persistence'를 사용해야 합니다.
@@ -30,7 +31,11 @@ public class Product {
     @Column(nullable = false)
     private int price;
 
-    private List<String> imageUrl;
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "product_image_urls",
+        joinColumns = @JoinColumn(name = "product_id"))
+    @Column(name = "image_url")
+    private List<String> imageUrl = new ArrayList<>();
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "category_id")
