@@ -22,7 +22,7 @@ public class OciUploadService {
 
     private final ObjectStorage objectStorageClient;
 
-    OciProperties ociProperties;
+    private final OciProperties ociProperties;
 
     public ImageDto.GenerateUploadUrlResponse generatePreAuthenticatedUploadUrl(ImageDto.GenerateUploadUrlRequest request) {
         // 1. OCI에 저장될 파일 이름 생성 (중복 방지를 위해 UUID 사용)
