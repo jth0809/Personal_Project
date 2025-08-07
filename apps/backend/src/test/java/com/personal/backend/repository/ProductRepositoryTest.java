@@ -42,7 +42,7 @@ class ProductRepositoryTest {
                 .name("테스트용 가방")
                 .price(50000)
                 .description("설명입니다.")
-                .imageUrl("test.jpg")
+                .imageUrl(List.of("test.jpg"))
                 .build();
 
         // when: 데이터베이스에 저장하고, 다시 ID로 조회하면

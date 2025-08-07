@@ -1,7 +1,10 @@
 package com.personal.backend.config.data;
 
+import com.personal.backend.config.oci.OciProperties;
 import com.personal.backend.domain.*;
 import com.personal.backend.repository.*;
+
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -26,6 +29,7 @@ public class DataInitializer implements CommandLineRunner {
     private final OrderRepository orderRepository;
     private final PasswordEncoder passwordEncoder;
     private final Dataproperties dataproperties;
+    private final OciProperties ociproperties;
 
     @Override
     @Transactional
@@ -72,21 +76,27 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void createCategoriesAndProducts() {
+
+        User user = userRepository.findByEmail("test@admin.com")
+                .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
+
         Category computers = categoryRepository.findByName("컴퓨터")
                 .orElseGet(() -> categoryRepository.save(new Category("컴퓨터")));
         Category clothes = categoryRepository.findByName("의류")
                 .orElseGet(() -> categoryRepository.save(new Category("의류")));
         Category books = categoryRepository.findByName("도서")
                 .orElseGet(() -> categoryRepository.save(new Category("도서")));
-
+        
+        String testOciUrl = "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/"+ociproperties.namespace()+"/b/"+ociproperties.bucketName()+"/o/";
+        
         List<Product> products = List.of(
-            new Product("고성능 노트북", "최신 M4 칩이 탑재된 노트북입니다.", 2500000, "images/laptop.jpg", computers),
-            new Product("기계식 키보드", "타건감이 뛰어난 기계식 키보드입니다.", 120000, "images/keyboard.jpg", computers),
-            new Product("QHD 모니터", "27인치 고해상도 모니터입니다.", 350000, "images/monitor.jpg", computers),
-            new Product("편안한 반팔 티셔츠", "100% 순면으로 만든 부드러운 티셔츠입니다.", 25000, "images/tshirt.jpg", clothes),
-            new Product("데님 청바지", "어디에나 잘 어울리는 클래식한 청바지입니다.", 79000, "images/jeans.jpg", clothes),
-            new Product("스프링 부트 완벽 가이드", "실무 예제로 배우는 스프링 부트의 모든 것.", 38000, "images/spring_book.jpg", books),
-            new Product("JPA 프로그래밍 입문", "자바 ORM 표준 기술을 익혀보세요.", 35000, "images/jpa_book.jpg", books)
+            new Product("고성능 노트북", "최신 M4 칩이 탑재된 노트북입니다.", 2500000, List.of(testOciUrl+"1252cac8-e82d-458e-a5a1-b245a6364ae7_laptop.jpg"), computers,user),
+            new Product("기계식 키보드", "타건감이 뛰어난 기계식 키보드입니다.", 120000, List.of(testOciUrl+"30371fe9-4dae-49da-a61a-7c5eee276106_keyboard.jpg"), computers,user),
+            new Product("QHD 모니터", "27인치 고해상도 모니터입니다.", 350000, List.of(testOciUrl+"55b7f62b-f789-4843-b6b3-6e66ec809baf_monitor.jpg"), computers,user),
+            new Product("편안한 반팔 티셔츠", "100% 순면으로 만든 부드러운 티셔츠입니다.", 25000, List.of(testOciUrl+"330fc4ef-15cb-4cca-a25f-f5eaf2caab85_tshirt.jpg"), clothes,user),
+            new Product("데님 청바지", "어디에나 잘 어울리는 클래식한 청바지입니다.", 79000, List.of(testOciUrl+"b958d224-576c-4262-bcec-e491005cbacd_jeans.jpg"), clothes,user),
+            new Product("스프링 부트 완벽 가이드", "실무 예제로 배우는 스프링 부트의 모든 것.", 38000, List.of(testOciUrl+"66820148-d942-4199-89e9-57a3f18e334e_spring_book.jpg"), books,user),
+            new Product("JPA 프로그래밍 입문", "자바 ORM 표준 기술을 익혀보세요.", 35000, List.of(testOciUrl+"155a3427-1262-4957-b390-204e7d38a18f_jpa_book.jpg"), books,user)
         );
 
         for (Product product : products) {

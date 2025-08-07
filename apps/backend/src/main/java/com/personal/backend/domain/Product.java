@@ -1,5 +1,7 @@
 package com.personal.backend.domain;
 
+import java.util.List;
+
 // 👇 1. 'javax.persistence'가 아닌 'jakarta.persistence'를 사용해야 합니다.
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -28,24 +30,29 @@ public class Product {
     @Column(nullable = false)
     private int price;
 
-    private String imageUrl;
+    private List<String> imageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "category_id")
     private Category category;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
     // 👇 5. Builder 패턴을 사용하여 객체 생성을 더 명확하고 유연하게 만듭니다.
     @Builder
-    public Product(String name, String description, int price, String imageUrl, Category category) {
+    public Product(String name, String description, int price, List<String> imageUrl, Category category, User user) {
         this.name = name;
         this.description = description;
         this.price = price;
         this.imageUrl = imageUrl;
         this.category = category;
+        this.user = user;
     }
 
     // 👇 6. Setter 대신, 의미가 명확한 비즈니스 메소드를 통해 데이터를 변경합니다.
-    public void updateDetails(String name, String description, int price, String imageUrl) {
+    public void updateDetails(String name, String description, int price, List<String> imageUrl) {
         this.name = name;
         this.description = description;
         this.price = price;
@@ -54,5 +61,10 @@ public class Product {
 
     public void setCategory(Category category) {
         this.category = category;
+    }
+    
+
+    public void deleteImageUrl(String imageName){
+        this.imageUrl.remove(imageName);
     }
 }

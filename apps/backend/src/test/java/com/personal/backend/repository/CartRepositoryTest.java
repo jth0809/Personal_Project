@@ -11,6 +11,7 @@ import org.springframework.test.context.ActiveProfiles;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
+import java.util.List;
 import java.util.Optional; 
 
 @DataJpaTest
@@ -46,7 +47,7 @@ class CartRepositoryTest {
                 .name("테스트용 티셔츠")
                 .price(30000)
                 .description("편안한 티셔츠입니다.")
-                .imageUrl("tshirt.jpg")
+                .imageUrl(List.of("tshirt.jpg"))
                 .build();
         savedProduct1 = productRepository.save(product1);
 
@@ -54,7 +55,7 @@ class CartRepositoryTest {
                 .name("테스트용 바지")
                 .price(45000)
                 .description("편안한 바지입니다.")
-                .imageUrl("pants.jpg")
+                .imageUrl(List.of("pants.jpg"))
                 .build();
         savedProduct2 = productRepository.save(product2);
     }

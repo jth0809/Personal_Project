@@ -5,7 +5,6 @@ import com.personal.backend.domain.CartItem;
 import com.personal.backend.domain.Product;
 import com.personal.backend.domain.User;
 import com.personal.backend.dto.CartDto;
-import com.personal.backend.repository.CartItemRepository;
 import com.personal.backend.repository.CartRepository;
 import com.personal.backend.repository.ProductRepository;
 import com.personal.backend.repository.UserRepository;
@@ -13,7 +12,6 @@ import com.personal.backend.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,9 +41,9 @@ public class CartService {
                                 item.getProduct().getId(),
                                 item.getProduct().getName(),
                                 item.getProduct().getPrice(),
-                                item.getProduct().getImageUrl(),
+                                item.getProduct().getImageUrl().get(0),
                                 item.getQuantity()
-                        )).collect(Collectors.toList()),
+                        )).toList(),
                 totalPrice
         );
     }
@@ -107,7 +105,6 @@ public class CartService {
         int totalPrice = cart.getCartItems().stream()
                 .mapToInt(item -> item.getProduct().getPrice() * item.getQuantity())
                 .sum();
-
         return new CartDto.CartResponse(
                 cart.getCartItems().stream()
                         .map(item -> new CartDto.CartItemResponse(
@@ -115,9 +112,9 @@ public class CartService {
                                 item.getProduct().getId(),
                                 item.getProduct().getName(),
                                 item.getProduct().getPrice(),
-                                item.getProduct().getImageUrl(),
+                                item.getProduct().getImageUrl().get(0),
                                 item.getQuantity()
-                        )).collect(Collectors.toList()),
+                        )).toList(),
                 totalPrice
         );
     }

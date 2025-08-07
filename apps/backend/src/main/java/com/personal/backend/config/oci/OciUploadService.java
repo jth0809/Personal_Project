@@ -1,14 +1,23 @@
 package com.personal.backend.config.oci;
 
+import com.oracle.bmc.model.BmcException;
 import com.oracle.bmc.objectstorage.ObjectStorage;
 import com.oracle.bmc.objectstorage.model.CreatePreauthenticatedRequestDetails;
 import com.oracle.bmc.objectstorage.requests.CreatePreauthenticatedRequestRequest;
+import com.oracle.bmc.objectstorage.requests.DeleteObjectRequest;
 import com.oracle.bmc.objectstorage.responses.CreatePreauthenticatedRequestResponse;
+import com.personal.backend.domain.Product;
+import com.personal.backend.domain.User;
 import com.personal.backend.dto.ImageDto;
+import com.personal.backend.repository.ProductRepository;
+import com.personal.backend.repository.UserRepository;
+
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -24,6 +33,11 @@ public class OciUploadService {
     private final ObjectStorage objectStorageClient;
 
     private final OciProperties ociProperties;
+
+    private final ProductRepository productRepository;
+
+    private final UserRepository userRepository;
+
     public List<ImageDto.UploadInfoResponse> generatePreAuthenticatedUploadUrls(ImageDto.GenerateUploadUrlsRequest request) {
     return request.fileNames().stream()
             .map(fileName -> {
@@ -70,5 +84,36 @@ public class OciUploadService {
         String imageUrl = ociHost + "/n/" + ociProperties.namespace() + "/b/" + ociProperties.bucketName() + "/o/" + uniqueObjectName;
 
         return new ImageDto.GenerateUploadUrlResponse(uploadUrl, imageUrl);
+    }
+
+    @Transactional
+    public void deleteImage(Long productId, String objectName, String userEmail) {
+        
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
+        
+        Product product = productRepository.findById(productId)
+            .orElseThrow(() -> new EntityNotFoundException("Product not found with id: " + productId));
+        
+        if (!product.getUser().getId().equals(user.getId())) {
+            throw new SecurityException("해당 이미지를 삭제할 권한이 없습니다.");
+        }
+
+        try{
+            DeleteObjectRequest request = DeleteObjectRequest.builder()
+                .namespaceName(ociProperties.namespace())
+                .bucketName(ociProperties.bucketName())
+                .objectName(objectName)
+                .build();
+        
+            
+            objectStorageClient.deleteObject(request);
+
+            product.deleteImageUrl(objectName);
+            productRepository.save(product);
+
+        }catch (BmcException e) {
+            throw new RuntimeException("Failed to delete image from cloud storage.", e);
+        }
     }
 }

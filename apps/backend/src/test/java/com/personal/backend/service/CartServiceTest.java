@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,10 +40,12 @@ class CartServiceTest {
     private Product dummyProduct;
     private Cart dummyCart;
 
+    
+
     @BeforeEach
     void setUp() {
         dummyUser = User.builder().email("test@user.com").build();
-        dummyProduct = Product.builder().name("테스트 상품").price(10000).build();
+        dummyProduct = Product.builder().name("테스트 상품").price(10000).imageUrl(List.of("default-image.jpg")).build();
         try { // ID 설정
             var productIdField = Product.class.getDeclaredField("id");
             productIdField.setAccessible(true);

@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -40,8 +41,8 @@ class ProductControllerTest {
     void getAllProducts_Success() throws Exception {
         // given
         List<ProductDto.Response> productList = List.of(
-            new ProductDto.Response(1L, "상품1", "설명1", 1000, "img1.jpg", "카테고리1"),
-            new ProductDto.Response(2L, "상품2", "설명2", 2000, "img2.jpg", "카테고리2")
+            new ProductDto.Response(1L, "상품1", "설명1", 1000, List.of("img1.jpg"), "카테고리1"),
+            new ProductDto.Response(2L, "상품2", "설명2", 2000, List.of("img2.jpg"), "카테고리2")
         );
         when(productService.findProducts(null)).thenReturn(productList);
 
@@ -57,10 +58,10 @@ class ProductControllerTest {
     @DisplayName("상품 생성 API - 성공 (ADMIN 권한)")
     void createProduct_Success_WithAdminRole() throws Exception {
         // given
-        ProductDto.CreateRequest request = new ProductDto.CreateRequest("새 상품", "새 설명", 15000, "new.jpg", 1L);
-        ProductDto.Response dummyResponse = new ProductDto.Response(1L, "새 상품", "새 설명", 15000, "new.jpg", "카테고리1");
+        ProductDto.CreateRequest request = new ProductDto.CreateRequest("새 상품", "새 설명", 15000, List.of("new.jpg"), 1L);
+        ProductDto.Response dummyResponse = new ProductDto.Response(1L, "새 상품", "새 설명", 15000, List.of("new.jpg"), "카테고리1");
         // createProduct는 void를 반환하므로 doNothing() 사용
-        when(productService.createProduct(any(ProductDto.CreateRequest.class))).thenReturn(dummyResponse);
+        when(productService.createProduct(any(ProductDto.CreateRequest.class),anyString())).thenReturn(dummyResponse);
 
         // when & then
         mockMvc.perform(post("/products")
@@ -74,7 +75,7 @@ class ProductControllerTest {
     @DisplayName("상품 생성 API - 실패 (인증되지 않은 사용자)")
     void createProduct_Fail_Unauthorized() throws Exception {
         // given
-        ProductDto.CreateRequest request = new ProductDto.CreateRequest("새 상품", "새 설명", 15000, "new.jpg", 1L);
+        ProductDto.CreateRequest request = new ProductDto.CreateRequest("새 상품", "새 설명", 15000, List.of("new.jpg"), 1L);
         
         // when & then
         // @WithMockUser가 없으므로 인증되지 않은 사용자의 요청이 됩니다.
@@ -92,7 +93,8 @@ class ProductControllerTest {
     void deleteProduct_Success_WithAdminRole() throws Exception {
         // given
         Long productId = 1L;
-        doNothing().when(productService).deleteProduct(productId);
+        String userEmail = "test@user.com";
+        doNothing().when(productService).deleteProduct(productId,userEmail);
         
         // when & then
         mockMvc.perform(delete("/products/{id}", productId)

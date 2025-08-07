@@ -46,7 +46,7 @@ class CartItemRepositoryTest {
                 .name("테스트용 모니터")
                 .price(250000)
                 .description("선명한 모니터입니다.")
-                .imageUrl("monitor.jpg")
+                .imageUrl(List.of("monitor.jpg"))
                 .build();
         savedProduct = productRepository.save(product);
 

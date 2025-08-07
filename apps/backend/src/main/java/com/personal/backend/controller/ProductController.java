@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,9 +29,12 @@ public class ProductController {
     @Operation(summary = "상품 생성", description = "상품 생성 API")
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> createProduct(@RequestBody ProductDto.CreateRequest request) {
-        // 요청 본문(JSON)을 DTO로 받아, 실제 업무는 서비스 계층에 위임합니다.
-        productService.createProduct(request);
+    public ResponseEntity<Void> createProduct(
+        @RequestBody ProductDto.CreateRequest request,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        String userEmail = userDetails.getUsername();
+        productService.createProduct(request,userEmail);
         return ResponseEntity.ok().build(); // 성공적으로 생성되었음을 알리는 200 OK 응답을 반환합니다.
     }
     /**
@@ -40,10 +45,13 @@ public class ProductController {
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')") // 오직 ADMIN 역할만 실행 가능
     public ResponseEntity<ProductDto.Response> updateProduct(
-            @PathVariable Long id,
-            @RequestBody ProductDto.UpdateRequest request) {
-        // SonarQube 경고에 따라 불필요한 지역 변수 할당을 제거하고 바로 반환합니다.
-        return ResponseEntity.ok(productService.updateProduct(id, request));
+            @PathVariable Long productId,
+            @RequestBody ProductDto.UpdateRequest request,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) 
+    {
+        String userEmail = userDetails.getUsername();
+        return ResponseEntity.ok(productService.updateProduct(productId, request, userEmail));
     }
 
     /**
@@ -53,8 +61,12 @@ public class ProductController {
     @Operation(summary = "상품 삭제", description = "상품 삭제 API")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')") // 오직 ADMIN 역할만 실행 가능
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
-        productService.deleteProduct(id);
+    public ResponseEntity<Void> deleteProduct(
+        @PathVariable Long id,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        String userEmail = userDetails.getUsername();
+        productService.deleteProduct(id,userEmail);
         return ResponseEntity.noContent().build(); // 내용 없이 성공(204 No Content) 응답
     }
 

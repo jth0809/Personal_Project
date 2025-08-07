@@ -46,7 +46,7 @@ class OrderRepositoryTest {
                 .name("테스트용 신발")
                 .price(120000)
                 .description("편안한 신발입니다.")
-                .imageUrl("shoe.jpg")
+                .imageUrl(List.of("shoe.jpg"))
                 .build();
         savedProduct = productRepository.save(product);
     }

@@ -10,6 +10,10 @@ import java.util.List;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,4 +44,17 @@ public class ImageController {
         List<ImageDto.UploadInfoResponse> responses = ociUploadService.generatePreAuthenticatedUploadUrls(request);
         return ResponseEntity.ok(responses);
     }
+
+    @Operation(summary = "이미지 삭제", description = "OCI Object Storage에서 이미지를 삭제하고 DB에서 이미지를 삭제합니다.")
+    @DeleteMapping("\"/{objectName}/products/{productId}\"")
+    public ResponseEntity<Void> deleteImage(
+        @PathVariable Long productId,
+        @PathVariable String objectName,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        String userEmail = userDetails.getUsername();
+        ociUploadService.deleteImage(productId,objectName,userEmail);
+        return ResponseEntity.ok().build();
+    }
+
 }
