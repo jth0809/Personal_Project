@@ -5,7 +5,7 @@ metadata:
   name: data-seed-job
   namespace: default
 spec:
-  # 성공할 때까지 재시도하는 횟수
+  ttlSecondsAfterFinished: 60
   backoffLimit: 2
   template:
     spec:
