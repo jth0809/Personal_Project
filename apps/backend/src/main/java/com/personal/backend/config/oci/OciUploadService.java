@@ -38,7 +38,7 @@ public class OciUploadService {
 
         CreatePreauthenticatedRequestRequest parRequest = CreatePreauthenticatedRequestRequest.builder()
                 .namespaceName(ociProperties.namespace())
-                .bucketName(ociProperties.bucketname())
+                .bucketName(ociProperties.bucketName())
                 .createPreauthenticatedRequestDetails(details)
                 .build();
 
@@ -50,7 +50,7 @@ public class OciUploadService {
         String ociHost = objectStorageClient.getEndpoint().replace("/20160918", "");
         
         String uploadUrl = ociHost + fullPath;
-        String imageUrl = ociHost + "/n/" + ociProperties.namespace() + "/b/" + ociProperties.bucketname() + "/o/" + uniqueObjectName;
+        String imageUrl = ociHost + "/n/" + ociProperties.namespace() + "/b/" + ociProperties.bucketName() + "/o/" + uniqueObjectName;
 
         return new ImageDto.GenerateUploadUrlResponse(uploadUrl, imageUrl);
     }
