@@ -87,6 +87,17 @@ public class DataInitializer implements CommandLineRunner {
         Category books = categoryRepository.findByName("도서")
                 .orElseGet(() -> categoryRepository.save(new Category("도서")));
         
+        categoryRepository.findByName("가방")
+                .orElseGet(() -> categoryRepository.save(new Category("가방")));
+        categoryRepository.findByName("생활용품")
+                .orElseGet(() -> categoryRepository.save(new Category("생활용품")));
+        categoryRepository.findByName("액세서리")
+                .orElseGet(() -> categoryRepository.save(new Category("액세서리")));
+        categoryRepository.findByName("인테리어")
+                .orElseGet(() -> categoryRepository.save(new Category("인테리어")));
+        categoryRepository.findByName("문구")
+                .orElseGet(() -> categoryRepository.save(new Category("문구")));
+
         String testOciUrl = "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/"+ociproperties.namespace()+"/b/"+ociproperties.bucketName()+"/o/";
         
         List<Product> products = List.of(

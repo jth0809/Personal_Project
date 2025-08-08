@@ -3,6 +3,7 @@ package com.personal.backend.service;
 import com.personal.backend.domain.Category;
 import com.personal.backend.domain.Product;
 import com.personal.backend.domain.User;
+import com.personal.backend.dto.CategoryDto;
 import com.personal.backend.dto.ProductDto;
 import com.personal.backend.repository.CategoryRepository;
 import com.personal.backend.repository.ProductRepository;
@@ -10,9 +11,13 @@ import com.personal.backend.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor // final 필드에 대한 생성자를 자동으로 만들어줍니다. (생성자 주입)
@@ -64,13 +69,15 @@ public class ProductService {
             throw new SecurityException("해당 상품을 수정할 권한이 없습니다.");
         }
 
-        // 2. 엔티티의 비즈니스 메소드를 호출하여 데이터를 업데이트합니다.
-        // TODO: Category 변경 로직 추가 필요
+        Category category = categoryRepository.findById(request.categoryId())
+                .orElseThrow(() -> new EntityNotFoundException("카테고리를 찾을 수 없습니다."));
+
         product.updateDetails(
             request.name(),
             request.description(),
             request.price(),
-            request.imageUrl()
+            request.imageUrl(),
+            category
         );
 
         // @Transactional 어노테이션 덕분에, 메소드가 끝나면 변경된 내용이
@@ -100,20 +107,20 @@ public class ProductService {
      * 👇 핵심 수정: 기존 findAllProducts를 더 유연한 findProducts로 변경합니다.
      * 카테고리 ID가 있으면 필터링하고, 없으면 모든 상품을 조회합니다.
      */
-    public List<ProductDto.Response> findProducts(Long categoryId) {
-        List<Product> products;
-        if (categoryId != null) {
-            // 카테고리 ID가 주어진 경우, 해당 카테고리의 상품만 조회
-            products = productRepository.findByCategoryId(categoryId);
+    public Page<ProductDto.Response> findProducts(String keyword, Long categoryId, Pageable pageable) {
+        Page<Product> products;
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            // 키워드가 있으면, 이름으로 검색
+            products = productRepository.findByNameContaining(keyword, pageable);
+        } else if (categoryId != null) {
+            // 키워드는 없지만 카테고리 ID가 있으면, 카테고리로 검색
+            products = productRepository.findByCategoryId(categoryId, pageable);
         } else {
-            // 카테고리 ID가 없는 경우, 모든 상품 조회
-            products = productRepository.findAll();
+            // 키워드와 카테고리 ID 모두 없으면, 전체 조회
+            products = productRepository.findAll(pageable);
         }
 
-        // 조회된 Product 엔티티 리스트를 Response DTO 리스트로 변환하여 반환
-        return products.stream()
-                .map(ProductDto.Response::fromEntity)
-                .toList();
+        return products.map(ProductDto.Response::fromEntity);
     }
 
     // ID로 상품 단일 조회
@@ -122,4 +129,12 @@ public class ProductService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 상품을 찾을 수 없습니다. id=" + id));
         return ProductDto.Response.fromEntity(product);
     }
+
+    public List<CategoryDto.Response> findAllCategories() {
+        List<Category> categories = categoryRepository.findAll();
+        return categories.stream()
+                .map(CategoryDto.Response::fromEntity)
+                .toList();
+    }
+
 }

@@ -4,6 +4,7 @@ import com.personal.backend.domain.Category;
 import com.personal.backend.domain.Product;
 import com.personal.backend.domain.User;
 import com.personal.backend.domain.UserRole;
+import com.personal.backend.dto.CategoryDto;
 import com.personal.backend.dto.ProductDto;
 import com.personal.backend.repository.CategoryRepository;
 import com.personal.backend.repository.ProductRepository;
@@ -17,6 +18,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -120,6 +125,7 @@ class ProductServiceTest {
         ProductDto.UpdateRequest request = new ProductDto.UpdateRequest("수정된 이름", "수정된 설명", 20000, List.of("updated.jpg"), 1L);
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(dummyUser));
         when(productRepository.findById(productId)).thenReturn(Optional.of(dummyProduct));
+        when(categoryRepository.findById(request.categoryId())).thenReturn(Optional.of(dummyCategory));
 
         // when
         ProductDto.Response response = productService.updateProduct(productId, request, userEmail);
@@ -148,33 +154,102 @@ class ProductServiceTest {
     }
     
     @Test
-    @DisplayName("전체 상품 목록 조회")
-    void findProducts_FindAll() {
+    @DisplayName("전체 상품 목록 조회 (페이지네이션 적용)")
+    void findProducts_FindAll_WithPagination() {
         // given
-        when(productRepository.findAll()).thenReturn(List.of(dummyProduct, dummyProduct));
+        // 1. 테스트용 Pageable 객체를 생성합니다. (0번째 페이지, 10개씩)
+        Pageable pageable = PageRequest.of(0, 10);
+        
+        // 2. Mock Repository가 반환할 데이터 목록을 준비합니다.
+        List<Product> productList = List.of(dummyProduct);
+        Page<Product> productPage = new PageImpl<>(productList, pageable, productList.size());
+
+        // 3. Mock 설정: findAll(Pageable)이 호출되면 위에서 만든 Page 객체를 반환하도록 설정합니다.
+        when(productRepository.findAll(pageable)).thenReturn(productPage);
 
         // when
-        List<ProductDto.Response> products = productService.findProducts(null);
+        // 4. 서비스 메소드 호출 시 Pageable 객체를 전달합니다.
+        Page<ProductDto.Response> resultPage = productService.findProducts(null,null, pageable);
 
         // then
-        assertThat(products).hasSize(2);
-        verify(productRepository, times(1)).findAll();
-        verify(productRepository, never()).findByCategoryId(anyLong());
+        // 5. 반환된 Page 객체의 내용을 검증합니다.
+        assertThat(resultPage).isNotNull();
+        assertThat(resultPage.getContent()).hasSize(1); // 현재 페이지의 내용물 개수
+        assertThat(resultPage.getTotalElements()).isEqualTo(1); // 전체 항목 수
+        assertThat(resultPage.getTotalPages()).isEqualTo(1); // 전체 페이지 수
     }
 
     @Test
-    @DisplayName("카테고리별 상품 목록 조회")
-    void findProducts_FindByCategory() {
+    @DisplayName("카테고리별 상품 목록 조회 (페이지네이션 적용)")
+    void findProducts_FindByCategory_WithPagination() {
         // given
         Long categoryId = 1L;
-        when(productRepository.findByCategoryId(categoryId)).thenReturn(List.of(dummyProduct));
+        Pageable pageable = PageRequest.of(0, 10);
+        List<Product> productList = List.of(dummyProduct);
+        Page<Product> productPage = new PageImpl<>(productList, pageable, productList.size());
+
+        // 3. Mock 설정: findByCategoryId(Pageable)가 호출되면 Page 객체를 반환하도록 설정합니다.
+        when(productRepository.findByCategoryId(categoryId, pageable)).thenReturn(productPage);
         
         // when
-        List<ProductDto.Response> products = productService.findProducts(categoryId);
+        Page<ProductDto.Response> resultPage = productService.findProducts(null, categoryId, pageable);
 
         // then
-        assertThat(products).hasSize(1);
-        verify(productRepository, never()).findAll();
-        verify(productRepository, times(1)).findByCategoryId(categoryId);
+        assertThat(resultPage.getContent()).hasSize(1);
+        verify(productRepository, times(1)).findByCategoryId(categoryId, pageable);
+    }
+
+    @Test
+    @DisplayName("키워드로 상품 목록 조회 (페이지네이션 적용)")
+    void findProducts_SearchByKeyword_WithPagination() {
+        // given
+        String keyword = "노트북";
+        Pageable pageable = PageRequest.of(0, 10);
+        
+        // Mock Repository가 반환할 데이터 준비
+        List<Product> productList = List.of(dummyProduct);
+        Page<Product> productPage = new PageImpl<>(productList, pageable, productList.size());
+
+        // Mock 설정: findByNameContaining이 호출되면 준비된 Page 객체를 반환
+        when(productRepository.findByNameContaining(keyword, pageable)).thenReturn(productPage);
+
+        // when
+        // 서비스 호출 시 keyword를 전달하고 categoryId는 null로 전달
+        Page<ProductDto.Response> resultPage = productService.findProducts(keyword, null, pageable);
+
+        // then
+        assertThat(resultPage.getContent()).hasSize(1);
+        
+        // --- 핵심 검증 ---
+        // findByNameContaining 메소드가 정확히 1번 호출되었는지 확인
+        verify(productRepository, times(1)).findByNameContaining(keyword, pageable);
+        // 다른 조회 메소드들은 호출되지 않았는지 확인
+        verify(productRepository, never()).findAll(any(Pageable.class));
+        verify(productRepository, never()).findByCategoryId(anyLong(), any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("모든 카테고리 목록 조회 성공")
+    void findAllCategories_Success() {
+        // given
+        // 1. Mock Repository가 반환할 가짜 카테고리 엔티티 목록을 생성합니다.
+        List<Category> categoryList = List.of(
+            new Category("카테고리1"),
+            new Category("카테고리2")
+        );
+        // 2. Mock 설정: categoryRepository.findAll()이 호출되면 위에서 만든 리스트를 반환하도록 설정합니다.
+        when(categoryRepository.findAll()).thenReturn(categoryList);
+
+        // when
+        // 3. 실제 서비스 메소드를 호출합니다.
+        List<CategoryDto.Response> result = productService.findAllCategories();
+
+        // then
+        // 4. 반환된 DTO 리스트의 크기와 내용이 정확한지 검증합니다.
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).name()).isEqualTo("카테고리1");
+        
+        // 5. categoryRepository.findAll()이 정확히 1번 호출되었는지 검증합니다.
+        verify(categoryRepository, times(1)).findAll();
     }
 }

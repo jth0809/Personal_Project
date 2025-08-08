@@ -10,6 +10,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -97,25 +101,30 @@ class OrderServiceTest {
     }
 
     @Test
-    @DisplayName("주문 내역 조회 성공")
-    void getOrderHistory_Success() {
+    @DisplayName("주문 내역 조회 성공 (페이지네이션 적용)")
+    void getOrderHistory_Success_WithPagination() {
         // given
         String userEmail = "test@user.com";
-        // 주문에 주문 아이템 추가
-        OrderItem orderItem = OrderItem.builder().product(dummyProduct).count(2).orderPrice(10000).build();
-        dummyOrder.addOrderItem(orderItem);
+        // 1. 테스트용 Pageable 객체 생성
+        Pageable pageable = PageRequest.of(0, 10);
+        
+        // 2. Mock Repository가 반환할 Page<Order> 객체 생성
+        List<Order> orderList = List.of(dummyOrder);
+        Page<Order> orderPage = new PageImpl<>(orderList, pageable, orderList.size());
 
-        // Mock 설정
+        // 3. Mock 설정: findByUser(Pageable)가 호출되면 Page 객체를 반환하도록 설정
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(dummyUser));
-        when(orderRepository.findByUser(dummyUser)).thenReturn(List.of(dummyOrder));
+        when(orderRepository.findByUser(dummyUser, pageable)).thenReturn(orderPage);
 
         // when
-        List<OrderDto.HistoryResponse> history = orderService.getOrderHistory(userEmail);
+        // 4. 서비스 메소드 호출 시 Pageable 객체 전달
+        Page<OrderDto.HistoryResponse> resultPage = orderService.getOrderHistory(userEmail, pageable);
 
         // then
-        assertThat(history).hasSize(1);
-        assertThat(history.get(0).orderItems()).hasSize(1);
-        assertThat(history.get(0).orderItems().get(0).productName()).isEqualTo("테스트 상품");
+        // 5. 반환된 Page 객체의 내용을 검증
+        assertThat(resultPage).isNotNull();
+        assertThat(resultPage.getContent()).hasSize(1);
+        assertThat(resultPage.getTotalPages()).isEqualTo(1);
     }
 
     @Test

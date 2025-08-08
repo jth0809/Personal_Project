@@ -6,6 +6,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
@@ -111,6 +114,8 @@ class OrderRepositoryTest {
     @Test
     @DisplayName("특정 사용자의 모든 주문 조회 테스트")
     void findByUserTest() {
+
+        Pageable pageable = PageRequest.of(0, 10);
         // given: 다른 사용자(userB)를 추가로 생성
         User userB = User.builder().email("userB@example.com").password("pw").username("유저B").role(UserRole.USER).build();
         userRepository.save(userB);
@@ -124,7 +129,7 @@ class OrderRepositoryTest {
         orderRepository.save(Order.builder().user(userB).status(OrderStatus.COMPLETED).build());
 
         // when: 테스트 사용자(savedUser)로 주문 목록을 조회
-        List<Order> ordersOfSavedUser = orderRepository.findByUser(savedUser);
+        Page<Order> ordersOfSavedUser = orderRepository.findByUser(savedUser,pageable);
 
         // then: 조회된 주문 목록은 2개여야 하며, 모두 savedUser의 주문이어야 함
         assertThat(ordersOfSavedUser).hasSize(2);

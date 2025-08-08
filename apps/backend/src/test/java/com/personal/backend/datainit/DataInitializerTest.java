@@ -42,7 +42,7 @@ class DataInitializerTest {
         assertThat(user.getUsername()).isEqualTo("일반사용자");
 
         // --- 2. 카테고리 및 상품 데이터 검증 ---
-        assertThat(categoryRepository.count()).isEqualTo(3); // 컴퓨터, 의류, 도서
+        assertThat(categoryRepository.count()).isEqualTo(8); // 컴퓨터, 의류, 도서
         assertThat(productRepository.count()).isEqualTo(7); // 총 7개의 상품
 
         // --- 3. 장바구니 데이터 검증 ---

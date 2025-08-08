@@ -8,6 +8,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -58,15 +61,16 @@ class ProductRepositoryTest {
     @Test
     @DisplayName("상품 이름 포함 검색(findByNameContaining) 테스트")
     void findByNameContainingTest() {
+        Pageable pageable = PageRequest.of(0, 10);
         // given: 다양한 상품을 저장
         productRepository.save(Product.builder().name("나이키 에어포스").price(130000).build());
         productRepository.save(Product.builder().name("나이키 조던").price(170000).build());
         productRepository.save(Product.builder().name("아디다스 슈퍼스타").price(110000).build());
         
         // when: "나이키" 라는 키워드로 상품을 검색
-        List<Product> nikeProducts = productRepository.findByNameContaining("나이키");
-        List<Product> adidasProducts = productRepository.findByNameContaining("아디다스");
-        List<Product> nonExistentProducts = productRepository.findByNameContaining("없는상품");
+        Page<Product> nikeProducts = productRepository.findByNameContaining("나이키",pageable);
+        Page<Product> adidasProducts = productRepository.findByNameContaining("아디다스",pageable);
+        Page<Product> nonExistentProducts = productRepository.findByNameContaining("없는상품",pageable);
 
         // then: "나이키"가 포함된 상품은 2개, "아디다스"는 1개, "없는상품"은 0개여야 함
         assertThat(nikeProducts).hasSize(2);
@@ -78,15 +82,15 @@ class ProductRepositoryTest {
     @Test
     @DisplayName("카테고리 ID로 상품 조회(findByCategoryId) 테스트")
     void findByCategoryIdTest() {
-
+        Pageable pageable = PageRequest.of(0, 10);
         // given: 각 카테고리별로 상품을 저장
         productRepository.save(Product.builder().name("나이키 에어포스").price(130000).category(savedCategoryShoes).build());
         productRepository.save(Product.builder().name("리바이스 청바지").price(90000).category(savedCategoryClothes).build());
         productRepository.save(Product.builder().name("아디다스 슈퍼스타").price(110000).category(savedCategoryShoes).build());
 
         // when: '신발' 카테고리 ID로 상품을 조회
-        List<Product> shoeProducts = productRepository.findByCategoryId(savedCategoryShoes.getId());
-        List<Product> clothesProducts = productRepository.findByCategoryId(savedCategoryClothes.getId());
+        Page<Product> shoeProducts = productRepository.findByCategoryId(savedCategoryShoes.getId(),pageable);
+        Page<Product> clothesProducts = productRepository.findByCategoryId(savedCategoryClothes.getId(),pageable);
 
         // then: '신발' 카테고리 상품은 2개, '의류' 카테고리 상품은 1개여야 함
         assertThat(shoeProducts).hasSize(2);

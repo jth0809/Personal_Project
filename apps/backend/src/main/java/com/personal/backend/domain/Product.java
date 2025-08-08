@@ -57,11 +57,12 @@ public class Product {
     }
 
     // 👇 6. Setter 대신, 의미가 명확한 비즈니스 메소드를 통해 데이터를 변경합니다.
-    public void updateDetails(String name, String description, int price, List<String> imageUrl) {
+    public void updateDetails(String name, String description, int price, List<String> imageUrl, Category category) {
         this.name = name;
         this.description = description;
         this.price = price;
         this.imageUrl = imageUrl;
+        this.category = category;
     }
 
     public void setCategory(Category category) {

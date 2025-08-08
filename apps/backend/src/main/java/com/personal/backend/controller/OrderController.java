@@ -6,6 +6,11 @@ import com.personal.backend.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -41,10 +46,12 @@ public class OrderController {
      */
     @Operation(summary = "주문 조회", description = "주문 조회 API")
     @GetMapping("/history")
-    public ResponseEntity<List<OrderDto.HistoryResponse>> getOrderHistory(
-        @AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseEntity<Page<OrderDto.HistoryResponse>> getOrderHistory(
+        @AuthenticationPrincipal UserDetails userDetails,
+        @PageableDefault(size = 10, sort = "orderDate", direction = Sort.Direction.DESC) Pageable pageable
+        ) {
         String userEmail = userDetails.getUsername();
-        List<OrderDto.HistoryResponse> history = orderService.getOrderHistory(userEmail);
+        Page<OrderDto.HistoryResponse> history = orderService.getOrderHistory(userEmail, pageable);
         return ResponseEntity.ok(history);
     }
 

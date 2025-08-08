@@ -15,6 +15,9 @@ import com.personal.backend.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,16 +33,14 @@ public class OrderService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final CartRepository cartRepository;
-    private final CartItemRepository cartItemRepository;
     // 실제 구현에서는 UserRepository, ProductRepository 등도 필요합니다.
 
-    public List<OrderDto.HistoryResponse> getOrderHistory(String userEmail) {
+    public Page<OrderDto.HistoryResponse> getOrderHistory(String userEmail, Pageable pageable) {
         //현재 사용자의 주문 내역을 DB에서 조회하여 DTO로 변환하는 로직
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
-        List<Order> orders = orderRepository.findByUser(user);
-        return orders.stream()
-                     .map(order -> new OrderDto.HistoryResponse( // 각 Order 객체를 HistoryResponse DTO로 매핑
+        Page<Order> ordersPage = orderRepository.findByUser(user, pageable);
+        return ordersPage.map(order -> new OrderDto.HistoryResponse( // 각 Order 객체를 HistoryResponse DTO로 매핑
                         order.getId(),
                         order.getOrderDate(),
                         order.getStatus().name(),
@@ -50,8 +51,7 @@ public class OrderService {
                                         orderItem.getOrderPrice()
                                 ))
                                 .toList() // 결과를 List<OrderItemResponse>로 수집
-                    ))
-                     .toList();
+                    ));
     }
 
     @Transactional
