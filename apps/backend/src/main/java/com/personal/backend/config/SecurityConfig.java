@@ -15,6 +15,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import com.personal.backend.config.jwt.JwtAuthenticationFilter;
 import com.personal.backend.config.jwt.JwtTokenProvider;
+import com.personal.backend.config.oauth.OAuth2AuthenticationSuccessHandler;
+import com.personal.backend.service.CustomOAuth2UserService;
 
 @Configuration // 이 클래스가 설정 파일임을 스프링에게 알려줍니다.
 @EnableWebSecurity // 스프링 시큐리티의 웹 보안 기능을 활성화합니다.
@@ -23,6 +25,9 @@ import com.personal.backend.config.jwt.JwtTokenProvider;
 public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+
 
     /**
      * 비밀번호 암호화를 위한 PasswordEncoder를 스프링 빈으로 등록합니다.
@@ -57,6 +62,12 @@ public class SecurityConfig {
                         //.requestMatchers(HttpMethod.GET, "/swagger-ui/**").permitAll()
                         // 그 외의 모든 요청은 반드시 인증(로그인)된 사용자만 접근 가능
                         .anyRequest().authenticated()
+                )
+
+                .oauth2Login(oauth2 -> oauth2
+                        // 소셜 로그인 성공 후 처리를 담당할 핸들러와 서비스를 지정합니다.
+                        .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
+                        .successHandler(oAuth2AuthenticationSuccessHandler)
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
                                  UsernamePasswordAuthenticationFilter.class);

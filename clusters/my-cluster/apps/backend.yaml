@@ -34,6 +34,8 @@ spec:
                 name: jwt-secret
             - secretRef:
                 name: oci-info
+            - secretRef:
+                name: oauth-secret
           resources:
             requests:
               cpu: "100m"

@@ -7,7 +7,6 @@ import com.personal.backend.domain.OrderStatus;
 import com.personal.backend.domain.Product;
 import com.personal.backend.domain.User;
 import com.personal.backend.dto.OrderDto;
-import com.personal.backend.repository.CartItemRepository;
 import com.personal.backend.repository.CartRepository;
 import com.personal.backend.repository.OrderRepository;
 import com.personal.backend.repository.ProductRepository;

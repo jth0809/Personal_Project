@@ -28,6 +28,8 @@ spec:
                 name: jwt-secret
             - secretRef:
                 name: oci-info
+            - secretRef:
+                name: oauth-secret
           env:
             - name: SPRING_MAIN_WEB_APPLICATION_TYPE
               value: "NONE"
