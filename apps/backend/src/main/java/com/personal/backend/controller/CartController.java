@@ -5,6 +5,7 @@ import com.personal.backend.service.CartService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -38,7 +39,7 @@ public class CartController {
     @Operation(summary = "장바구니 추가", description = "장바구니 추가 API")
     @PostMapping("/items")
     public ResponseEntity<CartDto.CartResponse> addItemToCart(
-            @RequestBody CartDto.AddItemRequest request,
+            @Valid @RequestBody CartDto.AddItemRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
         String userEmail = userDetails.getUsername();
         CartDto.CartResponse updatedCart = cartService.addItem(userEmail, request);

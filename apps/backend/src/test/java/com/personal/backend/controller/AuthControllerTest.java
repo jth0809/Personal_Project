@@ -39,7 +39,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("회원가입 API 호출 성공")
     void signup_Success() throws Exception {
-        UserDto.SignupRequest request = new UserDto.SignupRequest("test@example.com", "password123", "테스트유저");
+        UserDto.SignupRequest request = new UserDto.SignupRequest("test@example.com", "password1234", "테스트유저");
         doNothing().when(userService).signup(any(UserDto.SignupRequest.class));
 
         // .with(csrf())는 이제 필터가 없으므로 필요 없습니다.
@@ -54,7 +54,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("로그인 API 호출 성공")
     void login_Success() throws Exception {
-        UserDto.LoginRequest request = new UserDto.LoginRequest("test@example.com", "password123");
+        UserDto.LoginRequest request = new UserDto.LoginRequest("test@example.com", "password1234");
         UserDto.TokenResponse tokenResponse = new UserDto.TokenResponse("dummy.jwt.token");
         when(authService.login(any(UserDto.LoginRequest.class))).thenReturn(tokenResponse);
 

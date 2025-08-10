@@ -1,14 +1,16 @@
 package com.personal.backend.dto;
 
 import java.util.List;
-
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 public class ImageDto {
 
     /**
      * 클라이언트가 업로드 URL 생성을 요청할 때 사용하는 DTO
      */
     public record GenerateUploadUrlRequest(
-            String fileName // 업로드할 파일의 원본 이름
+        @NotBlank(message = "파일 이름은 필수입니다.")    
+        String fileName // 업로드할 파일의 원본 이름
     ) {}
 
     /**
@@ -20,7 +22,8 @@ public class ImageDto {
     ) {}
 
     public record GenerateUploadUrlsRequest(
-            List<String> fileNames
+        @NotEmpty(message = "파일 이름은 필수입니다.")    
+        List<String> fileNames
     ) {}
 
     // 👇 응답 DTO가 파일별 URL 정보를 담는 객체의 '목록'을 반환하도록 수정

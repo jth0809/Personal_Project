@@ -5,6 +5,8 @@ import com.personal.backend.service.OrderService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
@@ -14,6 +16,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +25,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/orders")
+@Validated
 public class OrderController {
 
     private final OrderService orderService;
@@ -33,7 +37,7 @@ public class OrderController {
     @Operation(summary = "주문 생성", description = "주문 생성 API")
     @PostMapping
     public ResponseEntity<String> createOrder(
-        @RequestBody OrderDto.CreateRequest request,
+        @Valid @RequestBody OrderDto.CreateRequest request,
         @AuthenticationPrincipal UserDetails userDetails) {
         String userEmail = userDetails.getUsername();
         Long orderId = orderService.createOrder(userEmail, request);
@@ -44,7 +48,7 @@ public class OrderController {
      * 현재 사용자의 주문 내역을 조회하는 API
      * GET /api/orders/history
      */
-    @Operation(summary = "주문 조회", description = "주문 조회 API")
+    @Operation(summary = "모든 주문 조회", description = "모든 주문 조회 API")
     @GetMapping("/history")
     public ResponseEntity<Page<OrderDto.HistoryResponse>> getOrderHistory(
         @AuthenticationPrincipal UserDetails userDetails,
@@ -62,7 +66,7 @@ public class OrderController {
     @Operation(summary = "주문 상세 조회", description = "주문 상세 조회 API")
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderDto.HistoryResponse> getOrderDetails(
-            @PathVariable Long orderId,
+            @Min(value = 0, message = "유효하지 않은 주문 ID입니다.") @PathVariable Long orderId,
             @AuthenticationPrincipal UserDetails userDetails) {
         String userEmail = userDetails.getUsername();
         OrderDto.HistoryResponse orderDetails = orderService.findOrderDetails(userEmail, orderId);
@@ -76,7 +80,7 @@ public class OrderController {
     @Operation(summary = "주문 취소", description = "주문 취소 API")
     @DeleteMapping("/{orderId}")
     public ResponseEntity<OrderDto.HistoryResponse> cancelOrder(
-            @PathVariable Long orderId,
+            @Min(value = 0, message = "유효하지 않은 주문 ID입니다.") @PathVariable Long orderId,
             @AuthenticationPrincipal UserDetails userDetails) {
         String userEmail = userDetails.getUsername();
         // 서비스로부터 업데이트된 주문 정보를 받아 반환합니다.

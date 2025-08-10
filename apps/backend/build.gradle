@@ -41,6 +41,7 @@ dependencies {
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
 	implementation 'com.oracle.oci.sdk:oci-java-sdk-shaded-full:3.70.1'
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client:3.5.4'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
 }
 
 tasks.named('test') {

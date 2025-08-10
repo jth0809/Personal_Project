@@ -1,17 +1,24 @@
 package com.personal.backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.personal.backend.config.jwt.JwtTokenProvider;
+import com.personal.backend.config.oauth.OAuth2AuthenticationSuccessHandler;
 import com.personal.backend.dto.ProductDto;
+import com.personal.backend.service.CustomOAuth2UserService;
 import com.personal.backend.service.ProductService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -27,7 +34,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(ProductController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
 class ProductControllerTest {
 
     @Autowired
@@ -38,7 +47,7 @@ class ProductControllerTest {
 
     @MockitoBean
     private ProductService productService;
-
+    
     @Test
     @WithMockUser
     @DisplayName("상품 목록 검색 API - 성공 (페이지네이션 적용)")

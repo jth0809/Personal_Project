@@ -5,17 +5,24 @@ import java.util.List;
 import com.personal.backend.domain.Product;
 import com.personal.backend.domain.User;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 public class ProductDto {
 
     /**
      * 클라이언트가 '상품 생성'을 요청할 때 사용하는 DTO
      */
     public record CreateRequest(
-            String name,
-            String description,
-            int price,
-            List<String> imageUrl,
-            Long categoryId // 상품이 속할 카테고리의 ID
+        @NotBlank(message = "상품 이름은 필수 입력 항목입니다.")  
+        String name,
+        String description,
+        @Min(value = 1, message = "가격은 0보다 커야 합니다.")    
+        int price,
+        @NotNull(message = "이미지 URL 목록은 필수입니다.")
+        List<String> imageUrl,
+        @NotNull(message = "카테고리 ID는 필수입니다.")
+        Long categoryId // 상품이 속할 카테고리의 ID
     ) {
         // 이 DTO를 실제 데이터베이스에 저장될 Product 엔티티로 변환하는 메소드
         // Category는 Service 계층에서 ID를 이용해 조회 후 주입합니다.
@@ -34,11 +41,15 @@ public class ProductDto {
      * 클라이언트가 '상품 정보 수정'을 요청할 때 사용하는 DTO
      */
     public record UpdateRequest(
-            String name,
-            String description,
-            int price,
-            List<String> imageUrl,
-            Long categoryId
+        @NotBlank(message = "상품 이름은 필수입니다.")    
+        String name,
+        String description,
+        @Min(value = 1, message = "가격은 0보다 커야 합니다.")    
+        int price,
+        @NotNull(message = "이미지 URL 목록은 필수입니다.")
+        List<String> imageUrl,
+        @NotNull(message = "카테고리 ID는 필수입니다.")
+        Long categoryId
     ) {}
 
     /**
