@@ -1,18 +1,13 @@
 package com.personal.backend.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.personal.backend.config.jwt.JwtTokenProvider;
-import com.personal.backend.config.oauth.OAuth2AuthenticationSuccessHandler;
 import com.personal.backend.dto.ProductDto;
-import com.personal.backend.service.CustomOAuth2UserService;
 import com.personal.backend.service.ProductService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -54,7 +49,7 @@ class ProductControllerTest {
     void getAllProducts_SearchByKeyword_Success() throws Exception {
         // given
         String keyword = "노트북";
-        ProductDto.Response productResponse = new ProductDto.Response(1L, "상품1", "설명1", 1000, List.of("img1.jpg"), "카테고리1");
+        ProductDto.Response productResponse = new ProductDto.Response(1L, "상품1", "설명1", 1000, 10,List.of("img1.jpg"), "카테고리1");
         Page<ProductDto.Response> responsePage = new PageImpl<>(List.of(productResponse));
 
         // Mock 설정: 서비스의 findProducts 메소드가 keyword와 함께 호출될 것을 예상
@@ -75,7 +70,7 @@ class ProductControllerTest {
     void getAllProducts_Success_WithPagination() throws Exception {
         // given
         // 1. Mock Service가 반환할 가짜 응답 DTO 목록과 Page 객체를 준비합니다.
-        ProductDto.Response productResponse = new ProductDto.Response(1L, "상품1", "설명1", 1000, List.of("img1.jpg"), "카테고리1");
+        ProductDto.Response productResponse = new ProductDto.Response(1L, "상품1", "설명1", 1000, 10,List.of("img1.jpg"), "카테고리1");
         List<ProductDto.Response> responseList = List.of(productResponse);
         Page<ProductDto.Response> responsePage = new PageImpl<>(responseList);
 
@@ -99,8 +94,8 @@ class ProductControllerTest {
     @DisplayName("상품 생성 API - 성공 (ADMIN 권한)")
     void createProduct_Success_WithAdminRole() throws Exception {
         // given
-        ProductDto.CreateRequest request = new ProductDto.CreateRequest("새 상품", "새 설명", 15000, List.of("new.jpg"), 1L);
-        ProductDto.Response dummyResponse = new ProductDto.Response(1L, "새 상품", "새 설명", 15000, List.of("new.jpg"), "카테고리1");
+        ProductDto.CreateRequest request = new ProductDto.CreateRequest("새 상품", "새 설명", 15000, List.of("new.jpg"), 1L,10);
+        ProductDto.Response dummyResponse = new ProductDto.Response(1L, "새 상품", "새 설명", 15000, 10, List.of("new.jpg"), "카테고리1");
         // createProduct는 void를 반환하므로 doNothing() 사용
         when(productService.createProduct(any(ProductDto.CreateRequest.class),anyString())).thenReturn(dummyResponse);
 
@@ -116,7 +111,7 @@ class ProductControllerTest {
     @DisplayName("상품 생성 API - 실패 (인증되지 않은 사용자)")
     void createProduct_Fail_Unauthorized() throws Exception {
         // given
-        ProductDto.CreateRequest request = new ProductDto.CreateRequest("새 상품", "새 설명", 15000, List.of("new.jpg"), 1L);
+        ProductDto.CreateRequest request = new ProductDto.CreateRequest("새 상품", "새 설명", 15000, List.of("new.jpg"), 1L,10);
         
         // when & then
         // @WithMockUser가 없으므로 인증되지 않은 사용자의 요청이 됩니다.

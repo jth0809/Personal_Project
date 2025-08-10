@@ -1,15 +1,13 @@
 package com.personal.backend.datainit;
 
-import com.oracle.bmc.apmtraces.model.ObjectStorage;
+import com.personal.backend.domain.CartItem;
 import com.personal.backend.domain.User;
 import com.personal.backend.repository.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -53,7 +51,7 @@ class DataInitializerTest {
         cartRepository.findByUser(user).ifPresent(cart -> {
             assertThat(cart.getCartItems()).hasSize(2);
             // 아이템 수량의 총합을 확인 (모니터 1개 + 청바지 2개 = 3개)
-            int totalQuantity = cart.getCartItems().stream().mapToInt(item -> item.getQuantity()).sum();
+            int totalQuantity = cart.getCartItems().stream().mapToInt(CartItem::getQuantity).sum();
             assertThat(totalQuantity).isEqualTo(3);
         });
         

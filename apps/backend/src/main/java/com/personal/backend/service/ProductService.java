@@ -77,7 +77,8 @@ public class ProductService {
             request.description(),
             request.price(),
             request.imageUrl(),
-            category
+            category,
+            request.stockQuantity()
         );
 
         // @Transactional 어노테이션 덕분에, 메소드가 끝나면 변경된 내용이

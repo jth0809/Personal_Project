@@ -19,7 +19,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @Tag(name = "주문 API", description = "주문 생성, 조회, 상세조회, 취소 API")
 @RestController

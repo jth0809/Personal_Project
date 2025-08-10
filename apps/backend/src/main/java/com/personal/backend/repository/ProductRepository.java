@@ -2,10 +2,16 @@ package com.personal.backend.repository;
 
 import com.personal.backend.domain.Product;
 
+import jakarta.persistence.LockModeType;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Query;
+
 import java.util.List;
+import java.util.Optional;
 
 // JpaRepository<관리할 엔티티, 엔티티의 ID 타입>를 상속받습니다.
 public interface ProductRepository extends JpaRepository<Product, Long> {
@@ -16,4 +22,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<Product> findByNameContaining(String keyword, Pageable pageable);
     Page<Product> findByCategoryId(Long categoryId, Pageable pageable);
     List<Product> findByName(String name);
+    
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from Product p where p.id = :id")
+    Optional<Product> findByIdWithPessimisticLock(Long id);
 }

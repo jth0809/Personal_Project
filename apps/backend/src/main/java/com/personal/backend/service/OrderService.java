@@ -69,9 +69,10 @@ public class OrderService {
         List<OrderItem> orderItems = request.orderItems().stream()
                 .map(itemRequest -> {
                     // 2-1. 상품 ID로 Product 엔티티를 조회합니다.
-                    Product product = productRepository.findById(itemRequest.productId())
+                    Product product = productRepository.findByIdWithPessimisticLock(itemRequest.productId())
                             .orElseThrow(() -> new EntityNotFoundException("상품을 찾을 수 없습니다. id=" + itemRequest.productId()));
                     
+                    product.decreaseStock(itemRequest.count());
                     // 2-2. 조회된 상품 정보로 OrderItem을 생성합니다.
                     //      (실제로는 재고 확인 로직 등이 추가되어야 합니다.)
                     return OrderItem.builder()
@@ -128,6 +129,10 @@ public class OrderService {
 
         // 엔티티의 비즈니스 메소드를 호출하여 상태 변경
         order.cancel();
+
+        for (OrderItem orderItem : order.getOrderItems()) {
+            orderItem.getProduct().increaseStock(orderItem.getCount());
+        }
         
         // 변경된 주문 상태를 DTO로 변환하여 즉시 반환합니다.
         return convertOrderToHistoryResponse(order);

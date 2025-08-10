@@ -22,7 +22,9 @@ public class ProductDto {
         @NotNull(message = "이미지 URL 목록은 필수입니다.")
         List<String> imageUrl,
         @NotNull(message = "카테고리 ID는 필수입니다.")
-        Long categoryId // 상품이 속할 카테고리의 ID
+        Long categoryId, // 상품이 속할 카테고리의 ID
+        @Min(value = 0, message = "재고는 0 이상이어야 합니다.")
+        int stockQuantity
     ) {
         // 이 DTO를 실제 데이터베이스에 저장될 Product 엔티티로 변환하는 메소드
         // Category는 Service 계층에서 ID를 이용해 조회 후 주입합니다.
@@ -33,6 +35,7 @@ public class ProductDto {
                     .price(price)
                     .imageUrl(imageUrl)
                     .user(user)
+                    .stockQuantity(stockQuantity)
                     .build();
         }
     }
@@ -49,7 +52,10 @@ public class ProductDto {
         @NotNull(message = "이미지 URL 목록은 필수입니다.")
         List<String> imageUrl,
         @NotNull(message = "카테고리 ID는 필수입니다.")
-        Long categoryId
+        Long categoryId,
+        @Min(value = 0, message = "재고는 0 이상이어야 합니다.")
+        int stockQuantity 
+
     ) {}
 
     /**
@@ -60,6 +66,7 @@ public class ProductDto {
             String name,
             String description,
             int price,
+            int stockQuantity,
             List<String> imageUrl,
             String categoryName // 카테고리 이름도 함께 전달
     ) {
@@ -70,6 +77,7 @@ public class ProductDto {
                     product.getName(),
                     product.getDescription(),
                     product.getPrice(),
+                    product.getStockQuantity(),
                     product.getImageUrl(),
                     product.getCategory() != null ? product.getCategory().getName() : null
             );

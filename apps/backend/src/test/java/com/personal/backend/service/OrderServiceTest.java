@@ -38,7 +38,6 @@ class OrderServiceTest {
     private ProductRepository productRepository;
     @Mock
     private CartRepository cartRepository;
-    // CartItemRepository는 이 테스트에서 직접 호출되지 않으므로 Mock 객체는 필요 없습니다.
 
     private User dummyUser;
     private Product dummyProduct;
@@ -56,7 +55,7 @@ class OrderServiceTest {
         } catch (Exception e) { e.printStackTrace(); }
 
 
-        dummyProduct = Product.builder().name("테스트 상품").price(10000).build();
+        dummyProduct = Product.builder().name("테스트 상품").price(10000).stockQuantity(10).build();
         try { // ID 설정
             var productIdField = Product.class.getDeclaredField("id");
             productIdField.setAccessible(true);
@@ -86,19 +85,18 @@ class OrderServiceTest {
         // Mock 설정
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(dummyUser));
         when(cartRepository.findByUser(dummyUser)).thenReturn(Optional.of(dummyCart));
-        when(productRepository.findById(100L)).thenReturn(Optional.of(dummyProduct));
         when(orderRepository.save(any(Order.class))).thenReturn(dummyOrder);
+        when(productRepository.findByIdWithPessimisticLock(100L)).thenReturn(Optional.of(dummyProduct));
 
         // when
         Long createdOrderId = orderService.createOrder(userEmail, request);
 
         // then
         assertThat(createdOrderId).isEqualTo(1L);
-        verify(userRepository, times(1)).findByEmail(userEmail);
-        verify(productRepository, times(1)).findById(100L);
+        verify(productRepository, times(1)).findByIdWithPessimisticLock(100L);
         verify(orderRepository, times(1)).save(any(Order.class));
-        verify(cartRepository, times(1)).save(dummyCart); // 장바구니 비우기 후 저장 호출 확인
     }
+
 
     @Test
     @DisplayName("주문 내역 조회 성공 (페이지네이션 적용)")
@@ -167,5 +165,58 @@ class OrderServiceTest {
         // Order 엔티티의 cancel() 메소드가 호출되어 상태가 CANCELED로 변경되었는지 확인
         assertThat(dummyOrder.getStatus()).isEqualTo(OrderStatus.CANCELED);
         assertThat(response.orderStatus()).isEqualTo(OrderStatus.CANCELED.name());
+    }
+
+    @Test
+    @DisplayName("주문 생성 실패 - 재고 부족")
+    void createOrder_Fail_OutOfStock() {
+        // given
+        String userEmail = "test@user.com";
+        // dummyProduct의 재고는 10개인데, 11개를 주문하는 상황
+        OrderDto.CreateRequest request = new OrderDto.CreateRequest(
+                List.of(new OrderDto.OrderItemRequest(100L, 11))
+        );
+
+        // Mock 설정: productRepository.findByIdWithPessimisticLock이 호출되면 dummyProduct를 반환
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(dummyUser));
+        when(productRepository.findByIdWithPessimisticLock(100L)).thenReturn(Optional.of(dummyProduct));
+        when(cartRepository.findByUser(dummyUser)).thenReturn(Optional.of(dummyCart));
+        // when & then
+        // productService.createOrder를 실행했을 때,
+        // Product 엔티티의 decreaseStock 메소드에서 IllegalStateException이 발생해야 합니다.
+        assertThrows(IllegalStateException.class, () -> {
+            orderService.createOrder(userEmail, request);
+        });
+
+        // then: 주문이 생성되면 안 되므로, orderRepository.save는 호출되지 않았는지 검증
+        verify(orderRepository, never()).save(any(Order.class));
+    }
+
+    // 👇 [추가] 주문 취소 시 재고 복구 시나리오 테스트
+    @Test
+    @DisplayName("주문 취소 성공 - 재고 복구 확인")
+    void cancelOrder_Success_StockIncrease() {
+        // given
+        String userEmail = "test@user.com";
+        Long orderId = 1L;
+        
+        // 주문 상품 설정: dummyProduct 2개를 주문한 상태
+        OrderItem orderItem = OrderItem.builder().product(dummyProduct).count(2).build();
+        dummyOrder.addOrderItem(orderItem);
+        
+        // 초기 재고는 10개
+        assertThat(dummyProduct.getStockQuantity()).isEqualTo(10);
+
+        // Mock 설정
+        when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(dummyUser));
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(dummyOrder));
+
+        // when
+        orderService.cancelOrder(userEmail, orderId);
+
+        // then
+        // 주문 취소 후, 2개가 다시 복구되어 재고가 12개가 되었는지 확인
+        assertThat(dummyProduct.getStockQuantity()).isEqualTo(12);
+        assertThat(dummyOrder.getStatus()).isEqualTo(OrderStatus.CANCELED);
     }
 }

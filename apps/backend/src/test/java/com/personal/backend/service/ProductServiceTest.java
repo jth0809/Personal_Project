@@ -77,6 +77,7 @@ class ProductServiceTest {
                 .imageUrl(List.of("image.jpg"))
                 .category(dummyCategory)
                 .user(dummyUser)
+                .stockQuantity(10)
                 .build();
     }
 
@@ -85,7 +86,7 @@ class ProductServiceTest {
     void createProduct_Success() {
         // given
         String userEmail = "test@user.com";
-        ProductDto.CreateRequest request = new ProductDto.CreateRequest("새 상품",  "새 설명", 15000,List.of("new.jpg"), 1L);
+        ProductDto.CreateRequest request = new ProductDto.CreateRequest("새 상품",  "새 설명", 15000,List.of("new.jpg"), 1L,10);
         
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(dummyUser));
         // Mock 설정: categoryRepository.findById가 호출되면 dummyCategory를 반환
@@ -108,7 +109,7 @@ class ProductServiceTest {
     void createProduct_Fail_CategoryNotFound() {
         // given
         String userEmail = "test@user.com";
-        ProductDto.CreateRequest request = new ProductDto.CreateRequest("새 상품",  "새 설명", 15000,List.of("new.jpg"), 99L);
+        ProductDto.CreateRequest request = new ProductDto.CreateRequest("새 상품",  "새 설명", 15000,List.of("new.jpg"), 99L,10);
         when(categoryRepository.findById(99L)).thenReturn(Optional.empty()); // 존재하지 않는 카테고리 ID로 조회 시 빈 Optional 반환
 
         // when & then
@@ -122,7 +123,7 @@ class ProductServiceTest {
         // given
         Long productId = 1L;
         String userEmail = "test@user.com";
-        ProductDto.UpdateRequest request = new ProductDto.UpdateRequest("수정된 이름", "수정된 설명", 20000, List.of("updated.jpg"), 1L);
+        ProductDto.UpdateRequest request = new ProductDto.UpdateRequest("수정된 이름", "수정된 설명", 20000, List.of("updated.jpg"), 1L,10);
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(dummyUser));
         when(productRepository.findById(productId)).thenReturn(Optional.of(dummyProduct));
         when(categoryRepository.findById(request.categoryId())).thenReturn(Optional.of(dummyCategory));
