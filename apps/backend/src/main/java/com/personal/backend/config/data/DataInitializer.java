@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Slf4j
 @Configuration
@@ -154,6 +155,7 @@ public class DataInitializer implements CommandLineRunner {
                         .user(user)
                         .orderDate(LocalDateTime.now().minusDays(7))
                         .status(OrderStatus.COMPLETED)
+                        .pgOrderId(UUID.randomUUID().toString())
                         .build();
 
                 OrderItem laptopItem = OrderItem.builder().order(order).product(laptopOpt.get()).count(1).orderPrice(2450000).build();

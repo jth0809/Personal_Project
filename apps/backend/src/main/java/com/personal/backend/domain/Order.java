@@ -19,6 +19,15 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true, nullable = false)
+    private String pgOrderId;
+
+    private String paymentKey;
+
+    private Integer refundedAmount;
+
+    private String cancelReason;
+
     // 어떤 사용자의 주문인지 연결 (다대일 관계)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
@@ -36,10 +45,11 @@ public class Order {
     private List<OrderItem> orderItems = new ArrayList<>();
 
     @Builder
-    public Order(User user, LocalDateTime orderDate, OrderStatus status) {
+    public Order(User user, LocalDateTime orderDate, OrderStatus status, String pgOrderId) {
         this.user = user;
         this.orderDate = orderDate;
         this.status = status;
+        this.pgOrderId = pgOrderId;
     }
 
     public void addOrderItem(OrderItem orderItem) {
@@ -47,16 +57,43 @@ public class Order {
         orderItem.setOrder(this);
     }
 
-    // 👇 핵심 수정: 주문 취소 로직을 엔티티 내부에 추가합니다.
-    /**
-     * 주문을 취소합니다.
-     * TODO: 실제로는 상품 재고를 다시 늘리는 등의 로직이 추가되어야 합니다.
-     */
-    public void cancel() {
-        // 이미 배송이 시작된 경우 등 취소가 불가능한 상태에 대한 검증 로직이 필요합니다.
-        if (status == OrderStatus.COMPLETED) { // 예시: 완료된 주문은 취소 불가
-            throw new IllegalStateException("이미 완료된 주문은 취소할 수 없습니다.");
+    public void markAsPaid(String paymentKey) {
+        if (this.status != OrderStatus.PENDING) {
+            throw new IllegalStateException("결제 대기 상태의 주문만 결제 완료 처리할 수 있습니다.");
         }
+        this.paymentKey = paymentKey;
+        this.status = OrderStatus.PAID;
+    }
+
+
+    public void cancel(String reason) {
+        if (status != OrderStatus.PAID) {
+            throw new IllegalStateException("결제 완료 상태의 주문만 취소가 가능합니다.");
+        }
+        
+        // 재고 복구 로직 (기존과 동일)
+        for (OrderItem orderItem : orderItems) {
+            orderItem.getProduct().increaseStock(orderItem.getCount());
+        }
+
         this.status = OrderStatus.CANCELED;
+        this.cancelReason = reason;
+        this.refundedAmount = calculateTotalAmount(); // 환불액 기록
+    }
+    public int calculateTotalAmount() {
+        return orderItems.stream()
+                .mapToInt(item -> item.getOrderPrice() * item.getCount())
+                .sum();
+    }
+
+    public void processPayment() {
+        // 이 주문이 '결제 대기' 상태일 때만 재고를 차감하도록 방어
+        if (this.status != OrderStatus.PENDING) {
+            throw new IllegalStateException("결제 대기 상태의 주문에 대해서만 결제 처리를 할 수 있습니다.");
+        }
+
+        for (OrderItem orderItem : this.orderItems) {
+            orderItem.getProduct().decreaseStock(orderItem.getCount());
+        }
     }
 }

@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
@@ -35,12 +36,12 @@ public class OrderController {
      */
     @Operation(summary = "주문 생성", description = "주문 생성 API")
     @PostMapping
-    public ResponseEntity<String> createOrder(
+    public ResponseEntity<OrderDto.CreateResponse> createOrder(
         @Valid @RequestBody OrderDto.CreateRequest request,
         @AuthenticationPrincipal UserDetails userDetails) {
         String userEmail = userDetails.getUsername();
-        Long orderId = orderService.createOrder(userEmail, request);
-        return ResponseEntity.ok("주문이 성공적으로 생성되었습니다. 주문 ID: " + orderId);
+        OrderDto.CreateResponse newOrder = orderService.createOrder(userEmail, request);
+        return ResponseEntity.ok(newOrder);
     }
 
     /**
@@ -80,10 +81,11 @@ public class OrderController {
     @DeleteMapping("/{orderId}")
     public ResponseEntity<OrderDto.HistoryResponse> cancelOrder(
             @Min(value = 0, message = "유효하지 않은 주문 ID입니다.") @PathVariable Long orderId,
+            @NotNull @RequestBody OrderDto.CancelRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
         String userEmail = userDetails.getUsername();
         // 서비스로부터 업데이트된 주문 정보를 받아 반환합니다.
-        OrderDto.HistoryResponse canceledOrder = orderService.cancelOrder(userEmail, orderId);
+        OrderDto.HistoryResponse canceledOrder = orderService.cancelOrder(userEmail, orderId, request.reason());
         return ResponseEntity.ok(canceledOrder);
     }
 }

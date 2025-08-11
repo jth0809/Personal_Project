@@ -36,6 +36,8 @@ spec:
                 name: oci-info
             - secretRef:
                 name: oauth-secret
+            - secretRef:
+                name: payments-secret-backend
           resources:
             requests:
               cpu: "100m"

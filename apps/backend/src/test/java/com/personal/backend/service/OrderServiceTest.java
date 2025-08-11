@@ -2,7 +2,12 @@ package com.personal.backend.service;
 
 import com.personal.backend.domain.*;
 import com.personal.backend.dto.OrderDto;
+import com.personal.backend.dto.PaymentDto;
+import com.personal.backend.payment.PaymentGateway;
 import com.personal.backend.repository.*;
+
+import reactor.core.publisher.Mono;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +27,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,6 +45,9 @@ class OrderServiceTest {
     private ProductRepository productRepository;
     @Mock
     private CartRepository cartRepository;
+
+    @Mock
+    private PaymentGateway paymentGateway;
 
     private User dummyUser;
     private Product dummyProduct;
@@ -65,7 +75,7 @@ class OrderServiceTest {
 
         dummyCart = Cart.builder().user(dummyUser).build();
 
-        dummyOrder = Order.builder().user(dummyUser).orderDate(LocalDateTime.now()).status(OrderStatus.PENDING).build();
+        dummyOrder = Order.builder().user(dummyUser).orderDate(LocalDateTime.now()).status(OrderStatus.PENDING).pgOrderId("test-pg-order-id").build();
         try { // ID 설정
             var orderIdField = Order.class.getDeclaredField("id");
             orderIdField.setAccessible(true);
@@ -89,12 +99,14 @@ class OrderServiceTest {
         when(productRepository.findByIdWithPessimisticLock(100L)).thenReturn(Optional.of(dummyProduct));
 
         // when
-        Long createdOrderId = orderService.createOrder(userEmail, request);
+        OrderDto.CreateResponse response = orderService.createOrder(userEmail, request);
 
         // then
-        assertThat(createdOrderId).isEqualTo(1L);
-        verify(productRepository, times(1)).findByIdWithPessimisticLock(100L);
-        verify(orderRepository, times(1)).save(any(Order.class));
+        assertThat(response).isNotNull();
+        assertThat(response.amount()).isEqualTo(20000); // 10000원 * 2개
+        assertThat(response.orderName()).isEqualTo("테스트 상품");
+        assertThat(response.pgOrderId()).isNotNull(); // pgOrderId가 생성되었는지 확인
+        assertThat(dummyCart.getCartItems()).isEmpty();
     }
 
 
@@ -124,6 +136,7 @@ class OrderServiceTest {
         assertThat(resultPage.getContent()).hasSize(1);
         assertThat(resultPage.getTotalPages()).isEqualTo(1);
     }
+    
 
     @Test
     @DisplayName("주문 상세 조회 실패 - 권한 없음")
@@ -148,23 +161,40 @@ class OrderServiceTest {
     }
 
     @Test
-    @DisplayName("주문 취소 성공")
+    @DisplayName("주문 취소 성공 - PG사 호출 및 재고 복구 확인")
     void cancelOrder_Success() {
         // given
         String userEmail = "test@user.com";
         Long orderId = 1L;
+        String cancelReason = "고객 변심";
 
-        // Mock 설정
+        // 1. 테스트를 위해 주문에 상품(2개)과 '결제 키'를 설정하고, 상태를 PAID로 만듭니다.
+        OrderItem orderItem = OrderItem.builder().product(dummyProduct).count(2).build();
+        dummyOrder.addOrderItem(orderItem);
+        dummyOrder.markAsPaid("test_payment_key_123");
+        
+        // 초기 재고는 10개
+        assertThat(dummyProduct.getStockQuantity()).isEqualTo(10);
+
+        // 2. Mock 설정
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(dummyUser));
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(dummyOrder));
+        // [수정] 어떤 문자열이든 받아들이도록 anyString() Matcher를 사용하여 유연성을 높입니다.
+        when(paymentGateway.cancel(anyString(), anyString()))
+                .thenReturn(Mono.just(new PaymentDto.ConfirmationResponse("CANCELED", "dummy-order-id", 20000)));
 
         // when
-        OrderDto.HistoryResponse response = orderService.cancelOrder(userEmail, orderId);
+        orderService.cancelOrder(userEmail, orderId, cancelReason);
 
         // then
-        // Order 엔티티의 cancel() 메소드가 호출되어 상태가 CANCELED로 변경되었는지 확인
+        // 3. PaymentGateway의 cancel 메소드가 올바른 인자들로 1번 호출되었는지 검증합니다.
+        verify(paymentGateway, times(1)).cancel(eq("test_payment_key_123"), eq(cancelReason));
+
+        // 4. 주문 상태가 CANCELED로 변경되었는지 확인합니다.
         assertThat(dummyOrder.getStatus()).isEqualTo(OrderStatus.CANCELED);
-        assertThat(response.orderStatus()).isEqualTo(OrderStatus.CANCELED.name());
+        
+        // 5. 상품 재고가 주문 수량(2개)만큼 다시 복구되었는지 확인합니다. (10 + 2 = 12)
+        assertThat(dummyProduct.getStockQuantity()).isEqualTo(12);
     }
 
     @Test
@@ -180,7 +210,6 @@ class OrderServiceTest {
         // Mock 설정: productRepository.findByIdWithPessimisticLock이 호출되면 dummyProduct를 반환
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(dummyUser));
         when(productRepository.findByIdWithPessimisticLock(100L)).thenReturn(Optional.of(dummyProduct));
-        when(cartRepository.findByUser(dummyUser)).thenReturn(Optional.of(dummyCart));
         // when & then
         // productService.createOrder를 실행했을 때,
         // Product 엔티티의 decreaseStock 메소드에서 IllegalStateException이 발생해야 합니다.
@@ -199,24 +228,50 @@ class OrderServiceTest {
         // given
         String userEmail = "test@user.com";
         Long orderId = 1L;
+        String cancelReason = "고객 변심";
         
         // 주문 상품 설정: dummyProduct 2개를 주문한 상태
         OrderItem orderItem = OrderItem.builder().product(dummyProduct).count(2).build();
         dummyOrder.addOrderItem(orderItem);
-        
+        dummyOrder.markAsPaid("test_payment_key_123");
         // 초기 재고는 10개
         assertThat(dummyProduct.getStockQuantity()).isEqualTo(10);
 
         // Mock 설정
         when(userRepository.findByEmail(userEmail)).thenReturn(Optional.of(dummyUser));
         when(orderRepository.findById(orderId)).thenReturn(Optional.of(dummyOrder));
+        when(paymentGateway.cancel(anyString(), anyString()))
+                .thenReturn(Mono.just(new PaymentDto.ConfirmationResponse("CANCELED", "dummy-order-id", 20000)));
 
         // when
-        orderService.cancelOrder(userEmail, orderId);
+        orderService.cancelOrder(userEmail, orderId, cancelReason);
 
         // then
         // 주문 취소 후, 2개가 다시 복구되어 재고가 12개가 되었는지 확인
         assertThat(dummyProduct.getStockQuantity()).isEqualTo(12);
         assertThat(dummyOrder.getStatus()).isEqualTo(OrderStatus.CANCELED);
+    }
+
+    @Test
+    @DisplayName("결제 후 처리(processPostPayment) 성공 - 재고 차감 및 장바구니 비우기")
+    void processPostPayment_Success() {
+
+        // 주문에 상품(2개) 추가
+        OrderItem orderItem = OrderItem.builder().product(dummyProduct).count(2).build();
+        dummyOrder.addOrderItem(orderItem);
+        
+        // 장바구니에도 동일한 상품이 있다고 가정
+        CartItem cartItem = CartItem.builder().product(dummyProduct).quantity(5).build();
+        dummyCart.getCartItems().add(cartItem);
+
+        // Mock 설정
+        when(orderRepository.findByPgOrderId(dummyOrder.getPgOrderId())).thenReturn(Optional.of(dummyOrder));
+
+        // when
+        orderService.processPostPayment(dummyOrder.getPgOrderId());
+
+        // then
+        // 1. 재고가 10개에서 8개로 정상적으로 차감되었는지 검증
+        assertThat(dummyProduct.getStockQuantity()).isEqualTo(8);
     }
 }

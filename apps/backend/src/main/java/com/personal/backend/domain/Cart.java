@@ -36,4 +36,16 @@ public class Cart {
     public void clearItems() {
         this.cartItems.clear();
     }
+
+    public void removeItems(List<Long> productIdsToRemove) {
+        if (this.cartItems != null && productIdsToRemove != null) {
+            this.cartItems.removeIf(cartItem ->
+                productIdsToRemove.contains(cartItem.getProduct().getId())
+            );
+        }
+    }
+
+    public void removeItem(CartItem item){
+        this.cartItems.remove(item);
+    }
 }

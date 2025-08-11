@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -39,17 +40,22 @@ class OrderControllerTest {
     private OrderService orderService;
 
     @Test
-    @DisplayName("주문 생성 API 성공")
-    void createOrder_Success() throws Exception {
+    @WithMockUser("test@user.com")
+    @DisplayName("결제 준비 API 호출 성공")
+    void initiateOrder_Success() throws Exception {
         // given
-        String userEmail = "test@user.com";
-        OrderDto.CreateRequest request = new OrderDto.CreateRequest(
-                List.of(new OrderDto.OrderItemRequest(100L, 2))
+        OrderDto.CreateRequest request = new OrderDto.CreateRequest(List.of(new OrderDto.OrderItemRequest(100L, 2)));
+        OrderDto.CreateResponse serviceResponse = new OrderDto.CreateResponse(
+                "test-pg-order-id",
+                "테스트 상품 외 1건",
+                20000,
+                "test@user.com",
+                "테스트유저"
         );
-        Long newOrderId = 1L;
 
-        // Mock a call to the service
-        when(orderService.createOrder(eq(userEmail), any(OrderDto.CreateRequest.class))).thenReturn(newOrderId);
+        // Mock 설정
+        when(orderService.createOrder(anyString(), any(OrderDto.CreateRequest.class)))
+                .thenReturn(serviceResponse);
 
         // when & then
         mockMvc.perform(post("/orders")
@@ -57,7 +63,8 @@ class OrderControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("주문이 성공적으로 생성되었습니다. 주문 ID: " + newOrderId));
+                .andExpect(jsonPath("$.pgOrderId").value("test-pg-order-id"))
+                .andExpect(jsonPath("$.amount").value(20000));
     }
 
     @Test
@@ -105,21 +112,26 @@ class OrderControllerTest {
     }
 
     @Test
+    @WithMockUser("test@user.com") // 테스트 실행 시 사용할 사용자 이메일
     @DisplayName("주문 취소 API 성공")
     void cancelOrder_Success() throws Exception {
         // given
         String userEmail = "test@user.com";
         Long orderId = 1L;
+        String cancelReason = "고객 변심";
+        
         OrderDto.HistoryResponse canceledOrderResponse = new OrderDto.HistoryResponse(
                 orderId, LocalDateTime.now(), "CANCELED", List.of()
         );
         
-        // Mock a call to the service
-        when(orderService.cancelOrder(userEmail, orderId)).thenReturn(canceledOrderResponse);
+        // Mock 설정: 서비스가 올바른 인자들로 호출되면, 미리 준비된 DTO를 반환하도록 설정
+        when(orderService.cancelOrder(userEmail, orderId, cancelReason)).thenReturn(canceledOrderResponse);
         
         // when & then
         mockMvc.perform(delete("/orders/{orderId}", orderId)
-                        .with(csrf()))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"reason\": \"" + cancelReason + "\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.orderStatus").value("CANCELED"));
     }

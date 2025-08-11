@@ -1,12 +1,14 @@
 package com.personal.backend.service;
 
 import com.personal.backend.domain.Cart;
+import com.personal.backend.domain.CartItem;
 import com.personal.backend.domain.Order;
 import com.personal.backend.domain.OrderItem;
 import com.personal.backend.domain.OrderStatus;
 import com.personal.backend.domain.Product;
 import com.personal.backend.domain.User;
 import com.personal.backend.dto.OrderDto;
+import com.personal.backend.payment.PaymentGateway;
 import com.personal.backend.repository.CartRepository;
 import com.personal.backend.repository.OrderRepository;
 import com.personal.backend.repository.ProductRepository;
@@ -22,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +35,7 @@ public class OrderService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final CartRepository cartRepository;
+    private final PaymentGateway paymentGateway;
     // 실제 구현에서는 UserRepository, ProductRepository 등도 필요합니다.
 
     public Page<OrderDto.HistoryResponse> getOrderHistory(String userEmail, Pageable pageable) {
@@ -54,48 +58,75 @@ public class OrderService {
     }
 
     @Transactional
-    public Long createOrder(String userEmail, OrderDto.CreateRequest request) {
-        // 1. 요청된 상품 ID들로 상품 정보 조회
-        // 2. 재고 확인 및 가격 계산
-        // 3. Order 및 OrderItem 엔티티 생성
-        // 4. Repository를 통해 DB에 저장
-        // 5. 장바구니 비우기
+    public OrderDto.CreateResponse createOrder(String userEmail, OrderDto.CreateRequest request) {
+        // 1. 사용자 조회
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
-        Cart cart = cartRepository.findByUser(user)
-                .orElseThrow(() -> new EntityNotFoundException("장바구니 정보를 찾을 수 없습니다."));
 
-                
-        List<OrderItem> orderItems = request.orderItems().stream()
+        // 2. 주문 상품 목록 생성 (내부적으로 상품 조회 및 재고 확인)
+        List<OrderItem> orderItems = createOrderItems(request.orderItems());
+        
+        // 3. 'PENDING' 상태의 주문 엔티티 생성 및 저장
+        Order order = createAndSavePendingOrder(user, orderItems);
+        
+        // 4. 프론트엔드에 전달할 DTO 생성
+        String orderName = generateOrderName(orderItems);
+        int totalAmount = calculateTotalPrice(orderItems);
+
+        clearCartItems(user, orderItems);
+
+        return new OrderDto.CreateResponse(
+                order.getPgOrderId(),
+                orderName,
+                totalAmount,
+                user.getEmail(),
+                user.getUsername()
+        );
+    }
+
+    private List<OrderItem> createOrderItems(List<OrderDto.OrderItemRequest> itemRequests) {
+        return itemRequests.stream()
                 .map(itemRequest -> {
-                    // 2-1. 상품 ID로 Product 엔티티를 조회합니다.
                     Product product = productRepository.findByIdWithPessimisticLock(itemRequest.productId())
                             .orElseThrow(() -> new EntityNotFoundException("상품을 찾을 수 없습니다. id=" + itemRequest.productId()));
                     
-                    product.decreaseStock(itemRequest.count());
-                    // 2-2. 조회된 상품 정보로 OrderItem을 생성합니다.
-                    //      (실제로는 재고 확인 로직 등이 추가되어야 합니다.)
+                    if (product.getStockQuantity() < itemRequest.count()) {
+                        throw new IllegalStateException("재고가 부족합니다. (상품명: " + product.getName() + ")");
+                    }
+
                     return OrderItem.builder()
                             .product(product)
-                            .orderPrice(product.getPrice()) // 주문 시점의 상품 가격을 기록
+                            .orderPrice(product.getPrice())
                             .count(itemRequest.count())
                             .build();
                 })
                 .toList();
+    }
+
+    private Order createAndSavePendingOrder(User user, List<OrderItem> orderItems) {
         Order order = Order.builder()
                 .user(user)
                 .orderDate(LocalDateTime.now())
-                .status(OrderStatus.PENDING) // 초기 상태는 '주문 대기'
+                .status(OrderStatus.PENDING)
+                .pgOrderId(UUID.randomUUID().toString())
                 .build();
+
         for (OrderItem orderItem : orderItems) {
             order.addOrderItem(orderItem);
         }
-        Order savedOrder = orderRepository.save(order);
+        return orderRepository.save(order);
+    }
 
-        cart.clearItems();
-        cartRepository.save(cart);
+    private int calculateTotalPrice(List<OrderItem> orderItems) {
+        return orderItems.stream()
+                .mapToInt(item -> item.getOrderPrice() * item.getCount())
+                .sum();
+    }
 
-        return savedOrder.getId();
+    private String generateOrderName(List<OrderItem> orderItems) {
+        if (orderItems.isEmpty()) return "주문 상품 없음";
+        String firstProductName = orderItems.get(0).getProduct().getName();
+        return orderItems.size() > 1 ? firstProductName + " 외 " + (orderItems.size() - 1) + "건" : firstProductName;
     }
 
     public OrderDto.HistoryResponse findOrderDetails(String userEmail, Long orderId) {
@@ -115,26 +146,29 @@ public class OrderService {
     }
 
     @Transactional
-    public OrderDto.HistoryResponse cancelOrder(String userEmail, Long orderId) {
+    public OrderDto.HistoryResponse cancelOrder(String userEmail, Long orderId, String cancelReason) {
+        // 1. 사용자 및 주문 정보를 조회하고, 취소 권한이 있는지 확인합니다.
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
-
+        
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new EntityNotFoundException("주문을 찾을 수 없습니다."));
 
-        // 보안 검증
         if (!order.getUser().getId().equals(user.getId())) {
             throw new SecurityException("해당 주문을 취소할 권한이 없습니다.");
         }
 
-        // 엔티티의 비즈니스 메소드를 호출하여 상태 변경
-        order.cancel();
+        // 2. PaymentGateway를 통해 PG사에 '결제 취소'를 먼저 요청합니다.
+        //    이 과정이 실패하면(예: 이미 취소된 결제), 예외가 발생하여 아래 로직은 실행되지 않습니다.
+        paymentGateway.cancel(order.getPaymentKey(), cancelReason)
+                      .block(); // 비동기 작업이 완료될 때까지 동기적으로 기다립니다.
 
-        for (OrderItem orderItem : order.getOrderItems()) {
-            orderItem.getProduct().increaseStock(orderItem.getCount());
-        }
-        
-        // 변경된 주문 상태를 DTO로 변환하여 즉시 반환합니다.
+        // 3. PG사 환불이 성공적으로 완료되었을 때만, 우리 DB의 주문 상태를 변경하고 재고를 복구합니다.
+        //    Order 엔티티가 모든 관련 비즈니스 로직을 직접 처리합니다.
+        order.cancel(cancelReason);
+
+        // 4. 변경된 최종 주문 상태를 DTO로 변환하여 반환합니다.
+        //    @Transactional에 의해 이 메소드가 끝나면 order의 변경사항이 DB에 자동으로 저장됩니다.
         return convertOrderToHistoryResponse(order);
     }
 
@@ -151,6 +185,49 @@ public class OrderService {
                     ))
                     .toList()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public int getOrderAmountByPgOrderId(String pgOrderId) {
+        Order order = orderRepository.findByPgOrderId(pgOrderId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 주문을 찾을 수 없습니다."));
+
+        // 주문에 포함된 모든 상품의 가격 * 수량을 합산하여 반환
+        return order.getOrderItems().stream()
+                .mapToInt(item -> item.getOrderPrice() * item.getCount())
+                .sum();
+    }
+
+    /**
+     * PG사 주문 ID로 주문을 찾아 상태를 '결제 완료'로 변경합니다.
+     */
+    @Transactional
+    public void markOrderAsPaid(String pgOrderId, String paymentKey) {
+        Order order = orderRepository.findByPgOrderId(pgOrderId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 주문을 찾을 수 없습니다."));
+
+        order.markAsPaid(paymentKey); // Order 엔티티의 비즈니스 메소드 호출
+    }
+
+    @Transactional
+    public void processPostPayment(String pgOrderId) {
+    // 1. pgOrderId로 방금 결제가 완료된 주문(Order)을 찾습니다.
+        Order order = orderRepository.findByPgOrderId(pgOrderId)
+                .orElseThrow(() -> new EntityNotFoundException("주문을 찾을 수 없습니다."));
+        
+        order.processPayment();
+    }
+
+    private void clearCartItems(User user, List<OrderItem> orderItems) {
+        Cart cart = cartRepository.findByUser(user)
+                .orElseThrow(() -> new EntityNotFoundException("장바구니 정보를 찾을 수 없습니다."));
+
+        List<Long> orderedProductIds = orderItems.stream()
+                .map(item -> item.getProduct().getId())
+                .toList();
+                
+        cart.removeItems(orderedProductIds);
+        cartRepository.save(cart);
     }
 }
 

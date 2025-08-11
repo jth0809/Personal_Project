@@ -13,6 +13,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -62,6 +63,7 @@ class OrderRepositoryTest {
                 .user(savedUser)
                 .orderDate(LocalDateTime.now())
                 .status(OrderStatus.PENDING) // 주문 상태는 '대기'
+                .pgOrderId(UUID.randomUUID().toString())
                 .build();
 
         OrderItem orderItem = OrderItem.builder()
@@ -92,17 +94,20 @@ class OrderRepositoryTest {
     @Test
     @DisplayName("주문 취소 기능 테스트")
     void cancelOrderTest() {
+        String cancelReason = "고객 변심";
         // given: 완료(COMPLETED) 상태가 아닌 주문을 하나 생성하여 저장합니다.
         Order order = Order.builder()
                 .user(savedUser)
                 .orderDate(LocalDateTime.now())
                 .status(OrderStatus.PENDING)
+                .pgOrderId(UUID.randomUUID().toString())
                 .build();
         Order savedOrder = orderRepository.save(order);
 
         // when: 저장된 주문을 조회하여 cancel() 메소드를 호출합니다.
         Order foundOrder = orderRepository.findById(savedOrder.getId()).orElseThrow();
-        foundOrder.cancel();
+        foundOrder.markAsPaid("test_payment_key");
+        foundOrder.cancel(cancelReason);
         // @DataJpaTest는 트랜잭션을 사용하므로, 변경 감지(dirty checking)에 의해
         // save를 명시적으로 호출하지 않아도 업데이트 쿼리가 실행됩니다.
 
@@ -122,11 +127,11 @@ class OrderRepositoryTest {
 
         // given-2: 각 사용자별로 주문을 생성하여 저장
         // savedUser(테스트 사용자)는 2개의 주문을 가짐
-        orderRepository.save(Order.builder().user(savedUser).status(OrderStatus.COMPLETED).build());
-        orderRepository.save(Order.builder().user(savedUser).status(OrderStatus.PENDING).build());
+        orderRepository.save(Order.builder().user(savedUser).status(OrderStatus.COMPLETED).pgOrderId(UUID.randomUUID().toString()).build());
+        orderRepository.save(Order.builder().user(savedUser).status(OrderStatus.PENDING).pgOrderId(UUID.randomUUID().toString()).build());
         
         // userB는 1개의 주문을 가짐
-        orderRepository.save(Order.builder().user(userB).status(OrderStatus.COMPLETED).build());
+        orderRepository.save(Order.builder().user(userB).status(OrderStatus.COMPLETED).pgOrderId(UUID.randomUUID().toString()).build());
 
         // when: 테스트 사용자(savedUser)로 주문 목록을 조회
         Page<Order> ordersOfSavedUser = orderRepository.findByUser(savedUser,pageable);
