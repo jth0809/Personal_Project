@@ -70,6 +70,7 @@ jobs:
 
           docker run --rm \
             --user $(id -u):$(id -g) \
+            -e HOME=/app \
             -v $(pwd)/apps/backend:/app \
             -w /app \
             gradle:jdk21-ubi-minimal \
