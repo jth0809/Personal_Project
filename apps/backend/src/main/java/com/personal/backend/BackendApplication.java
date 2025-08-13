@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class BackendApplication {
 
 	public static void main(String[] args) {
+		// Simple change for testing caching
 		SpringApplication.run(BackendApplication.class, args);
 	}
 	
