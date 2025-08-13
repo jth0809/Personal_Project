@@ -24,16 +24,16 @@ RUN chmod +x ./gradlew
 ENV GRADLE_USER_HOME /root/.gradle
 
 # Explicitly download and extract Gradle distribution
-RUN --mount=type=cache,target=/root/.gradle/wrapper/dists 
-    mkdir -p /root/.gradle/wrapper/dists && 
-    wget -q https://services.gradle.org/distributions/gradle-8.14.2-bin.zip -P /root/.gradle/wrapper/dists && 
-    unzip -q /root/.gradle/wrapper/dists/gradle-8.14.2-bin.zip -d /root/.gradle/wrapper/dists/gradle-8.14.2-bin && 
+RUN --mount=type=cache,target=/root/.gradle/wrapper/dists \
+    mkdir -p /root/.gradle/wrapper/dists && \
+    wget -q https://services.gradle.org/distributions/gradle-8.14.2-bin.zip -P /root/.gradle/wrapper/dists && \
+    unzip -q /root/.gradle/wrapper/dists/gradle-8.14.2-bin.zip -d /root/.gradle/wrapper/dists/gradle-8.14.2-bin && \
     rm /root/.gradle/wrapper/dists/gradle-8.14.2-bin.zip
 
 # Gradle Wrapper가 필요한 Gradle 배포판을 다운로드하도록 합니다。
 # 이 단계는 캐시될 수 있어 다음 빌드부터는 다운로드를 건너뛸 수 있습니다。
 # This step will now primarily verify the distribution, not download it.
-RUN --mount=type=cache,target=/root/.gradle/wrapper/dists 
+RUN --mount=type=cache,target=/root/.gradle/wrapper/dists \
     ./gradlew --no-daemon --version
 
 # Gradle 빌드 실행. --no-daemon 옵션은 CI 환경에서 권장됩니다.
