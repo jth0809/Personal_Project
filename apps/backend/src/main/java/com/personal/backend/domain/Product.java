@@ -18,8 +18,12 @@ import lombok.NoArgsConstructor;
 public class Product {
 
     @Id
-    // 👇 3. ID 생성 전략을 DB에 위임하는 IDENTITY 방식이 더 간단하고 일반적입니다.
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "product_seq_generator")
+    @SequenceGenerator(
+            name = "product_seq_generator",
+            sequenceName = "PRODUCT_SEQ",
+            allocationSize = 1
+    )
     private Long id;
 
     // 👇 4. 프론트엔드 요구사항에 맞는 실제 컬럼들을 추가합니다.
@@ -48,7 +52,6 @@ public class Product {
     @JoinColumn(name = "user_id")
     private User user;
 
-    // 👇 5. Builder 패턴을 사용하여 객체 생성을 더 명확하고 유연하게 만듭니다.
     @Builder
     public Product(String name, String description, int price, List<String> imageUrl, Category category, User user, int stockQuantity) {
         this.name = name;
@@ -60,7 +63,6 @@ public class Product {
         this.stockQuantity = stockQuantity;
     }
 
-    // 👇 6. Setter 대신, 의미가 명확한 비즈니스 메소드를 통해 데이터를 변경합니다.
     public void updateDetails(String name, String description, int price, List<String> imageUrl, Category category, int stockQuantity) {
         this.name = name;
         this.description = description;

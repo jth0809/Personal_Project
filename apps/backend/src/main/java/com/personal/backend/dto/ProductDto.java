@@ -3,6 +3,7 @@ package com.personal.backend.dto;
 import java.util.List;
 
 import com.personal.backend.domain.Product;
+import com.personal.backend.domain.ProductDetail;
 import com.personal.backend.domain.User;
 
 import jakarta.validation.constraints.Min;
@@ -68,7 +69,8 @@ public class ProductDto {
             int price,
             int stockQuantity,
             List<String> imageUrl,
-            String categoryName // 카테고리 이름도 함께 전달
+            String categoryName,
+            String detailContent // 상품 상세 설명 필드 추가
     ) {
         // Product 엔티티 객체를 클라이언트에게 보여줄 Response DTO로 변환하는 정적 메소드
         public static Response fromEntity(Product product) {
@@ -79,7 +81,22 @@ public class ProductDto {
                     product.getPrice(),
                     product.getStockQuantity(),
                     product.getImageUrl(),
-                    product.getCategory() != null ? product.getCategory().getName() : null
+                    product.getCategory() != null ? product.getCategory().getName() : null,
+                    null // 상세 설명이 없는 경우 null
+            );
+        }
+
+        // Product와 ProductDetail 엔티티를 함께 받아 변환하는 정적 메소드
+        public static Response fromEntity(Product product, ProductDetail productDetail) {
+            return new Response(
+                    product.getId(),
+                    product.getName(),
+                    product.getDescription(),
+                    product.getPrice(),
+                    product.getStockQuantity(),
+                    product.getImageUrl(),
+                    product.getCategory() != null ? product.getCategory().getName() : null,
+                    productDetail != null ? productDetail.getContent() : null
             );
         }
     }

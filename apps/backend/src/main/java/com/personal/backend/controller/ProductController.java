@@ -1,6 +1,7 @@
 package com.personal.backend.controller;
 
 import com.personal.backend.dto.ProductDto;
+import com.personal.backend.dto.ShippingInfoDto;
 import com.personal.backend.service.ProductService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -103,5 +104,12 @@ public class ProductController {
         // URL 경로의 {id} 값을 Long 타입의 id 변수로 받습니다.
         ProductDto.Response product = productService.findProductById(productId);
         return ResponseEntity.ok(product); // 조회된 상품 정보와 함께 200 OK 응답을 반환합니다.
+    }
+
+    @Operation(summary = "상품 배송 정책 조회", description = "특정 상품의 배송 정책 정보를 조회합니다.")
+    @GetMapping("/{productId}/shipping")
+    public ResponseEntity<ShippingInfoDto.Response> getProductShippingInfo(@Min(value = 0, message = "유효하지 않은 상품 ID입니다.") @PathVariable Long productId) {
+        ShippingInfoDto.Response shippingInfo = productService.getShippingInfoByProductId(productId);
+        return ResponseEntity.ok(shippingInfo);
     }
 }

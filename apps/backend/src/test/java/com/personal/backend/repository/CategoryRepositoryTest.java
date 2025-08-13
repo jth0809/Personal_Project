@@ -1,11 +1,13 @@
 package com.personal.backend.repository;
 
 import com.personal.backend.domain.Category;
+
+import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -19,6 +21,9 @@ class CategoryRepositoryTest {
 
     @Autowired
     private CategoryRepository categoryRepository;
+
+    @Autowired
+    private TestEntityManager entityManager;
 
     @Test
     @DisplayName("카테고리 저장 및 조회 테스트")
@@ -42,12 +47,14 @@ class CategoryRepositoryTest {
         Category category1 = new Category("의류");
         categoryRepository.save(category1);
 
-        // when & then: 동일한 이름으로 두 번째 카테고리를 저장하려고 할 때,
-        // 데이터 무결성 위반 예외(DataIntegrityViolationException)가 발생하는지 확인합니다.
+        // when: 동일한 이름으로 두 번째 카테고리를 저장합니다.
         Category category2 = new Category("의류");
+        categoryRepository.save(category2);
         
-        assertThrows(DataIntegrityViolationException.class, () -> {
-            categoryRepository.save(category2);
+        // then: flush를 호출하여 DB 제약 조건 위반이 발생하도록 유도하고,
+        //      DataIntegrityViolationException이 발생하는지 확인합니다.
+        assertThrows(ConstraintViolationException.class, () -> {
+            entityManager.flush();
         });
     }
 

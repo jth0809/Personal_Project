@@ -2,12 +2,15 @@ package com.personal.backend.service;
 
 import com.personal.backend.domain.Category;
 import com.personal.backend.domain.Product;
+import com.personal.backend.domain.ShippingInfo;
 import com.personal.backend.domain.User;
 import com.personal.backend.domain.UserRole;
 import com.personal.backend.dto.CategoryDto;
 import com.personal.backend.dto.ProductDto;
+import com.personal.backend.dto.ShippingInfoDto;
 import com.personal.backend.repository.CategoryRepository;
 import com.personal.backend.repository.ProductRepository;
+import com.personal.backend.repository.ShippingInfoRepository;
 import com.personal.backend.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -48,9 +51,13 @@ class ProductServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private ShippingInfoRepository shippingInfoRepository;
+
     private Category dummyCategory;
     private Product dummyProduct;
     private User dummyUser;
+    private ShippingInfo dummyShippingInfo;
 
     @BeforeEach
     void setUp() {
@@ -78,6 +85,12 @@ class ProductServiceTest {
                 .category(dummyCategory)
                 .user(dummyUser)
                 .stockQuantity(10)
+                .build();
+        
+        dummyShippingInfo = ShippingInfo.builder()
+                .shippingMethod("택배")
+                .shippingFee(3000)
+                .freeShippingThreshold(50000)
                 .build();
     }
 
@@ -252,5 +265,33 @@ class ProductServiceTest {
         
         // 5. categoryRepository.findAll()이 정확히 1번 호출되었는지 검증합니다.
         verify(categoryRepository, times(1)).findAll();
+    }
+
+    @Test
+    @DisplayName("상품 배송 정보 조회 성공")
+    void getShippingInfoByProductId_Success() {
+        // given
+        Long productId = 1L;
+        when(shippingInfoRepository.findById(productId)).thenReturn(Optional.of(dummyShippingInfo));
+
+        // when
+        ShippingInfoDto.Response response = productService.getShippingInfoByProductId(productId);
+
+        // then
+        assertThat(response).isNotNull();
+        assertThat(response.shippingMethod()).isEqualTo("택배");
+        verify(shippingInfoRepository, times(1)).findById(productId);
+    }
+
+    @Test
+    @DisplayName("상품 배송 정보 조회 실패 - 정보를 찾을 수 없음")
+    void getShippingInfoByProductId_Fail_NotFound() {
+        // given
+        Long productId = 99L;
+        when(shippingInfoRepository.findById(productId)).thenReturn(Optional.empty());
+
+        // when & then
+        assertThrows(EntityNotFoundException.class, () -> productService.getShippingInfoByProductId(productId));
+        verify(shippingInfoRepository, times(1)).findById(productId);
     }
 }

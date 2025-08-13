@@ -21,14 +21,21 @@ RUN chmod +x ./gradlew
 
 # Gradle 빌드 실행. --no-daemon 옵션은 CI 환경에서 권장됩니다.
 # build가 성공하면 build/libs/ 에 .jar 파일이 생성됩니다.
-RUN ./gradlew build -x test --no-daemon
-
+RUN ./gradlew build --no-daemon -x test
 
 # =========================================
-# 2. 최종 실행 스테이지 (Runner Stage)
+# 2. 테스트 스테이지 (Tester Stage)
+# =========================================
+FROM builder AS tester
+
+# 테스트 실행
+RUN ./gradlew test --no-daemon
+
+# =========================================
+# 3. 최종 실행 스테이지 (Runner Stage)
 # =========================================
 # JDK가 아닌 JRE(Java Runtime Environment)만 포함된 훨씬 가벼운 이미지를 사용
-FROM eclipse-temurin:21-jre
+FROM bellsoft/liberica-openjre-debian:24
 
 WORKDIR /app
 

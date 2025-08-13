@@ -13,7 +13,12 @@ import lombok.NoArgsConstructor;
 public class CartItem {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "cart_items_seq_generator")
+    @SequenceGenerator(
+            name = "cart_items_seq_generator",
+            sequenceName = "CART_ITEMS_SEQ",
+            allocationSize = 1
+    )
     private Long id;
 
     // 어떤 장바구니에 속하는지 연결

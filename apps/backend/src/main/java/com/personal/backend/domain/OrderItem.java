@@ -13,7 +13,12 @@ import lombok.NoArgsConstructor;
 public class OrderItem {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "order_items_seq_generator")
+    @SequenceGenerator(
+            name = "order_items_seq_generator",
+            sequenceName = "ORDER_ITEMS_SEQ",
+            allocationSize = 1
+    )
     private Long id;
 
     // 어떤 주문에 속하는지 연결

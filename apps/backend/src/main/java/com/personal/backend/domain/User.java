@@ -13,7 +13,12 @@ import lombok.NoArgsConstructor;
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_seq_generator")
+    @SequenceGenerator(
+            name = "user_seq_generator",
+            sequenceName = "USER_SEQ",
+            allocationSize = 1
+    )
     private Long id;
 
     @Column(nullable = false, unique = true) // 이메일은 고유해야 함

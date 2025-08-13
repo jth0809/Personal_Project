@@ -16,7 +16,12 @@ import java.util.List;
 public class Order {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "order_seq_generator")
+    @SequenceGenerator(
+            name = "order_seq_generator",
+            sequenceName = "ORDER_SEQ",
+            allocationSize = 1
+    )
     private Long id;
 
     @Column(unique = true, nullable = false)
@@ -41,7 +46,7 @@ public class Order {
     // 하나의 주문은 여러 개의 주문 상품을 가짐 (일대다 관계)
     // mappedBy는 OrderItem의 'order' 필드에 의해 관리됨을 의미
     // cascade = CascadeType.ALL: 주문이 저장될 때 주문 상품도 함께 저장됨
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();
 
     @Builder
