@@ -69,6 +69,7 @@ jobs:
           mkdir -p apps/backend/.gradle
 
           docker run --rm \
+            --user $(id -u):$(id -g) \
             -v $(pwd)/apps/backend:/app \
             -w /app \
             gradle:jdk21-ubi-minimal \
