@@ -19,7 +19,7 @@ COPY gradle ./gradle
 RUN chmod +x ./gradlew
 
 # 의존성만 미리 다운로드하여 별도의 Docker 레이어에 저장합니다.
-RUN ./gradlew dependencies --no-daemon
+RUN ./gradlew dependencies
 
 # 2단계: 소스 코드 및 컴파일 레이어 생성
 # 소스 코드를 복사합니다. 이 단계 이후부터는 소스 코드가 변경될 때 다시 실행됩니다.
