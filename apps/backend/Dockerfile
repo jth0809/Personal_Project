@@ -14,14 +14,18 @@ COPY settings.gradle .
 
 COPY gradle ./gradle
 
-# 소스코드 복사
-COPY src ./src
-
 RUN chmod +x ./gradlew
 
 # Gradle Wrapper가 필요한 Gradle 배포판을 다운로드하도록 합니다.
 # 이 단계는 캐시될 수 있어 다음 빌드부터는 다운로드를 건너뛸 수 있습니다.
 RUN ./gradlew --no-daemon --version
+
+# 프로젝트 의존성을 다운로드하고 캐시합니다.
+# build.gradle이나 settings.gradle이 변경되지 않는 한 이 레이어는 캐시됩니다.
+RUN ./gradlew dependencies --no-daemon
+
+# 소스코드 복사
+COPY src ./src
 
 # Gradle 빌드 실행. --no-daemon 옵션은 CI 환경에서 권장됩니다.
 # build가 성공하면 build/libs/ 에 .jar 파일이 생성됩니다.
