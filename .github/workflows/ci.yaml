@@ -29,16 +29,17 @@ jobs:
       #    - path를 실제 캐시 디렉토리로 수정했습니다.
       #    - key를 build.gradle/settings.gradle 파일의 해시를 사용하도록 변경하여,
       #      의존성이 변경될 때 캐시가 무효화되도록 합니다.
-      - name: Cache Gradle packages
+      - name: Cache Gradle Data
         if: ${{ matrix.app == 'backend' }}
         uses: actions/cache@v4
         with:
           path: |
-            apps/backend/.gradle-cache
-            apps/backend/.gradle/build-cache
-          key: ${{ runner.os }}-gradle-${{ hashFiles('apps/backend/build.gradle', 'apps/backend/settings.gradle') }}
+            apps/backend/build-cache-home
+            apps/backend/.gradle
+          key: ${{ runner.os }}-gradle-${{ hashFiles('apps/backend/build.gradle', 'apps/backend/settings.gradle') }}-${{ hashFiles('apps/backend/src/**') }}
           restore-keys: |
-            ${{ runner.os }}-gradle-
+            ${{ runner.os }}-gradle-${{ hashFiles('apps/backend/build.gradle', 'apps/backend/settings.gradle') }}-
+
 
       - name: Get changed files
         id: changed-files
@@ -64,12 +65,14 @@ jobs:
       - name: Populate Gradle Cache
         if: steps.check_changes.outputs.changed == 'true' && matrix.app == 'backend'
         run: |
+          mkdir -p apps/backend/build-cache-home
+          mkdir -p apps/backend/.gradle
+
           docker run --rm \
             -v $(pwd)/apps/backend:/app \
-            -v $(pwd)/apps/backend/.gradle-cache:/root/.gradle \
             -w /app \
             gradle:jdk21-ubi-minimal \
-            bash -c "chmod +x ./gradlew && ./gradlew build --no-daemon -x test"
+            bash -c "chmod +x ./gradlew && ./gradlew build --no-daemon -x test -g /app/build-cache-home"
 
       - name: Log in to GHCR
         if: steps.check_changes.outputs.changed == 'true'

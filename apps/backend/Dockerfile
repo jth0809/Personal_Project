@@ -11,19 +11,18 @@ WORKDIR /app
 COPY gradlew .
 COPY build.gradle .
 COPY settings.gradle .
-
-COPY gradle ./gradle
-
-# 소스코드 복사
 COPY src ./src
+COPY .gradle /app/.gradle
 
 # Copy the Gradle cache from the build context
-COPY .gradle-cache /root/.gradle
+COPY build-cache-home /root/.gradle
+
+ENV GRADLE_USER_HOME /root/.gradle
 
 RUN chmod +x ./gradlew
 
 # Set GRADLE_USER_HOME to the copied cache location
-ENV GRADLE_USER_HOME /root/.gradle
+
 
 # Gradle Wrapper가 필요한 Gradle 배포판을 다운로드하도록 합니다.
 # 이 단계는 캐시될 수 있어 다음 빌드부터는 다운로드를 건너뛸 수 있습니다.
