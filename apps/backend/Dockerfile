@@ -7,15 +7,10 @@ FROM gradle:jdk21-ubi-minimal AS builder
 # 작업 디렉토리 설정
 WORKDIR /app
 
-# Gradle Wrapper와 빌드 스크립트를 먼저 복사하여 의존성 레이어 캐싱
-COPY gradlew .
-COPY build.gradle .
-COPY settings.gradle .
-
-COPY gradle ./gradle
-
-# 소스코드 복사
-COPY src ./src
+# 전체 애플리케이션 디렉토리를 복사하여 Docker 레이어 캐싱을 최적화합니다.
+# 이 단계는 gradlew, build.gradle, settings.gradle, gradle, src 등 모든 파일을 포함합니다.
+# 이 레이어는 이 파일들 중 하나라도 변경될 때만 무효화됩니다.
+COPY . .
 
 RUN chmod +x ./gradlew
 
