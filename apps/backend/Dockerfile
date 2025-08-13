@@ -16,6 +16,8 @@ COPY build.gradle .
 COPY settings.gradle .
 COPY gradle ./gradle
 
+RUN chmod +x ./gradlew
+
 # 의존성만 미리 다운로드하여 별도의 Docker 레이어에 저장합니다.
 RUN ./gradlew dependencies --no-daemon
 
