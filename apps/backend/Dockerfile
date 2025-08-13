@@ -21,12 +21,14 @@ RUN chmod +x ./gradlew
 
 # Gradle Wrapper가 필요한 Gradle 배포판을 다운로드하도록 합니다.
 # 이 단계는 캐시될 수 있어 다음 빌드부터는 다운로드를 건너뛸 수 있습니다.
-RUN ./gradlew --no-daemon --version
+RUN --mount=type=cache,target=/root/.gradle/wrapper/dists \
+    ./gradlew --no-daemon --version
 
 # Gradle 빌드 실행. --no-daemon 옵션은 CI 환경에서 권장됩니다.
 # build가 성공하면 build/libs/ 에 .jar 파일이 생성됩니다.
 # BuildKit의 캐시 마운트를 사용하여 Gradle 빌드 캐시를 활용합니다.
 RUN --mount=type=cache,target=/root/.gradle/caches \
+    --mount=type=cache,target=/root/.gradle/wrapper/dists \
     ./gradlew build --no-daemon -x test
 
 # =========================================
