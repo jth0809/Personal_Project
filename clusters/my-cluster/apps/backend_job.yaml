@@ -15,7 +15,7 @@ spec:
             secretName: oci-credentials
       containers:
         - name: data-seeder
-          image: ghcr.io/jth0809/personal_project/backend:6101ac3
+          image: ghcr.io/jth0809/personal_project/backend:3e09f13
           args: ["--init-data"]
           volumeMounts:
             - name: oci-secret-volume
