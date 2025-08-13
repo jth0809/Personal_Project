@@ -35,9 +35,9 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('apps/backend/build.gradle') }}
+          key: ${{ runner.os }}-gradle-static-v1 # Simplified key for diagnosis
           restore-keys: |
-            ${{ runner.os }}-gradle-
+            ${{ runner.os }}-gradle-static-
 
       # 1. 변경된 파일 목록을 가져옵니다.
       - name: Get changed files
