@@ -1,63 +1,53 @@
-# ========================================
+# ===================================================================
 # 1. 빌드 스테이지 (Builder Stage)
-# =======================================
-# Gradle과 JDK가 포함된 이미지를 빌드 환경으로 사용
+#    - 소스 코드를 컴파일하고 실행 가능한 .jar 파일을 만드는 역할
+# ===================================================================
 FROM gradle:jdk21-ubi-minimal AS builder
 
 # 작업 디렉토리 설정
 WORKDIR /app
 
-# Gradle Wrapper와 빌드 스크립트를 먼저 복사하여 의존성 레이어 캐싱
+# --- Docker 레이어 캐싱 최적화 ---
+# 1단계: 의존성 레이어 생성
+# build.gradle, settings.gradle 파일이 변경될 때만 아래 RUN 명령이 다시 실행됩니다.
+# 따라서 소스 코드만 변경되었을 때는 이 단계의 캐시를 그대로 재사용하여 시간을 절약합니다.
 COPY gradlew .
 COPY build.gradle .
 COPY settings.gradle .
 COPY gradle ./gradle
+
+# 의존성만 미리 다운로드하여 별도의 Docker 레이어에 저장합니다.
+RUN ./gradlew dependencies --no-daemon
+
+# 2단계: 소스 코드 및 컴파일 레이어 생성
+# 소스 코드를 복사합니다. 이 단계 이후부터는 소스 코드가 변경될 때 다시 실행됩니다.
 COPY src ./src
-COPY .gradle /app/.gradle
 
-# Copy the Gradle cache from the build context
-COPY build-cache-home /root/.gradle
-
-ENV GRADLE_USER_HOME /root/.gradle
-
-RUN chmod +x ./gradlew
-
-# Set GRADLE_USER_HOME to the copied cache location
-
-
-# Gradle Wrapper가 필요한 Gradle 배포판을 다운로드하도록 합니다.
-# 이 단계는 캐시될 수 있어 다음 빌드부터는 다운로드를 건너뛸 수 있습니다.
-RUN ./gradlew --no-daemon --version
-
-# Gradle 빌드 실행. --no-daemon 옵션은 CI 환경에서 권장됩니다.
-# build가 성공하면 build/libs/ 에 .jar 파일이 생성됩니다.
+# 소스 코드를 컴파일하고 최종 빌드를 실행합니다.
+# 의존성은 이전 레이어에 캐시되어 있으므로, 여기서는 컴파일 작업에만 집중합니다.
 RUN ./gradlew build --no-daemon -x test
 
-# =========================================
-# 2. 테스트 스테이지 (Tester Stage)
-# =========================================
-FROM builder AS tester
 
-# 테스트 실행
-RUN ./gradlew test --no-daemon
-
-# =========================================
-# 3. 최종 실행 스테이지 (Runner Stage)
-# =========================================
-# JDK가 아닌 JRE(Java Runtime Environment)만 포함된 훨씬 가벼운 이미지를 사용
+# ===================================================================
+# 2. 최종 실행 스테이지 (Runner Stage)
+#    - 실제 애플리케이션을 실행하는 역할
+#    - 최소한의 파일만 포함하여 가볍고 보안에 강한 이미지를 만듭니다.
+# ===================================================================
 FROM bellsoft/liberica-openjre-debian:24
 
+# 작업 디렉토리 설정
 WORKDIR /app
 
-# 보안을 위해 non-root 유저 생성 및 사용
+# 보안 강화를 위해 non-root 유저를 생성하고 해당 유저로 전환합니다.
 RUN addgroup --system spring && adduser --system --ingroup spring spring
 USER spring:spring
 
-# 빌드 스테이지에서 생성된 실행 가능한 .jar 파일만 복사
+# 빌드 스테이지에서 생성된 실행 가능한 .jar 파일만 복사합니다.
+# JDK, Gradle, 소스 코드 등 불필요한 파일은 모두 버려집니다.
 COPY --from=builder /app/build/libs/*.jar app.jar
 
-# 애플리케이션 포트 노출 (application.properties/yml의 server.port와 일치)
+# 애플리케이션 포트를 외부에 노출합니다.
 EXPOSE 8080
 
-# 애플리케이션 실행
+# 컨테이너가 시작될 때 애플리케이션을 실행합니다.
 ENTRYPOINT ["java","-jar","app.jar"]

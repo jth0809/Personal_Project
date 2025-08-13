@@ -25,22 +25,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 1. Gradle 캐시를 복원합니다.
-      #    - path를 실제 캐시 디렉토리로 수정했습니다.
-      #    - key를 build.gradle/settings.gradle 파일의 해시를 사용하도록 변경하여,
-      #      의존성이 변경될 때 캐시가 무효화되도록 합니다.
-      - name: Cache Gradle Data
-        if: ${{ matrix.app == 'backend' }}
-        uses: actions/cache@v4
-        with:
-          path: |
-            apps/backend/build-cache-home
-            apps/backend/.gradle
-          key: ${{ runner.os }}-gradle-${{ hashFiles('apps/backend/build.gradle', 'apps/backend/settings.gradle') }}-${{ hashFiles('apps/backend/src/**') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-${{ hashFiles('apps/backend/build.gradle', 'apps/backend/settings.gradle') }}-
-
-
       - name: Get changed files
         id: changed-files
         uses: tj-actions/changed-files@v46
@@ -56,25 +40,6 @@ jobs:
             echo "No changes detected in ${{ matrix.app }} or shared packages. Skipping build."
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
-      
-      # 👇 --- [ 핵심 수정 ] --- 👇
-      # 2. 캐시를 업데이트하기 위한 사전 빌드 단계
-      #    - 러너의 파일 시스템에 있는 캐시 디렉토리를 컨테이너에 마운트합니다.
-      #    - 컨테이너 안에서 빌드를 실행하면, 그 결과물(업데이트된 캐시)이
-      #      러너의 `apps/backend/.gradle-cache` 디렉토리에 직접 저장됩니다.
-      - name: Populate Gradle Cache
-        if: steps.check_changes.outputs.changed == 'true' && matrix.app == 'backend'
-        run: |
-          mkdir -p apps/backend/build-cache-home
-          mkdir -p apps/backend/.gradle
-
-          docker run --rm \
-            --user $(id -u):$(id -g) \
-            -e HOME=/app \
-            -v $(pwd)/apps/backend:/app \
-            -w /app \
-            gradle:jdk21-ubi-minimal \
-            bash -c "chmod +x ./gradlew && ./gradlew build --no-daemon -x test -g /app/build-cache-home"
 
       - name: Log in to GHCR
         if: steps.check_changes.outputs.changed == 'true'
