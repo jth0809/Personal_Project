@@ -11,12 +11,10 @@ on:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    # GHCR에 푸시할 수 있도록 권한을 부여합니다.
     permissions:
       contents: read
       packages: write
     
-    # 빌드할 앱 목록을 매트릭스로 정의합니다.
     strategy:
       matrix:
         app: [frontend, backend]
@@ -24,36 +22,29 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        # 변경 감지를 위해 전체 git 히스토리를 가져옵니다.
         with:
           fetch-depth: 0
 
+      # 1. Gradle 캐시를 복원합니다.
+      #    - path를 실제 캐시 디렉토리로 수정했습니다.
+      #    - key를 build.gradle/settings.gradle 파일의 해시를 사용하도록 변경하여,
+      #      의존성이 변경될 때 캐시가 무효화되도록 합니다.
       - name: Cache Gradle packages
         if: ${{ matrix.app == 'backend' }}
         uses: actions/cache@v4
         with:
-          path: |
-            apps/backend/test-cache-dir # A new, simple directory for testing actions/cache
-          key: ${{ runner.os }}-test-cache-v1 # A new, simple key for testing actions/cache
+          path: apps/backend/.gradle-cache
+          key: ${{ runner.os }}-gradle-${{ hashFiles('apps/backend/build.gradle', 'apps/backend/settings.gradle') }}
           restore-keys: |
-            ${{ runner.os }}-test-cache-
+            ${{ runner.os }}-gradle-
 
-      - name: Create test cache file
-        if: ${{ matrix.app == 'backend' }}
-        run: |
-          mkdir -p apps/backend/test-cache-dir
-          echo "Hello from cache" > apps/backend/test-cache-dir/test.txt
-
-      # 1. 변경된 파일 목록을 가져옵니다.
       - name: Get changed files
         id: changed-files
         uses: tj-actions/changed-files@v46
 
-      # 2. 각 앱의 경로에 변경이 있었는지 확인합니다.
       - name: Check for changes in app path
         id: check_changes
         run: |
-          # 현재 매트릭스의 앱 폴더(apps/${{ matrix.app }})나 공용 packages 폴더에 변경이 있는지 확인
           if (echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -q "apps/${{ matrix.app }}/") || \
              (echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -q "packages/"); then
             echo "Changes detected in ${{ matrix.app }} or shared packages. Proceeding to build."
@@ -62,15 +53,21 @@ jobs:
             echo "No changes detected in ${{ matrix.app }} or shared packages. Skipping build."
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
-          
-      # 3. 변경이 있을 때만 아래 단계를 실행합니다.
-      - name: Debug Gradle Wrapper Hash
-        if: ${{ matrix.app == 'backend' }}
+      
+      # 👇 --- [ 핵심 수정 ] --- 👇
+      # 2. 캐시를 업데이트하기 위한 사전 빌드 단계
+      #    - 러너의 파일 시스템에 있는 캐시 디렉토리를 컨테이너에 마운트합니다.
+      #    - 컨테이너 안에서 빌드를 실행하면, 그 결과물(업데이트된 캐시)이
+      #      러너의 `apps/backend/.gradle-cache` 디렉토리에 직접 저장됩니다.
+      - name: Populate Gradle Cache
+        if: steps.check_changes.outputs.changed == 'true' && matrix.app == 'backend'
         run: |
-          echo "Hashing apps/backend/gradle directory:"
-          find apps/backend/gradle -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum
-          echo "Hashing apps/backend/gradlew file:"
-          sha256sum apps/backend/gradlew
+          docker run --rm \
+            -v $(pwd)/apps/backend:/app \
+            -v $(pwd)/apps/backend/.gradle-cache:/root/.gradle \
+            -w /app \
+            gradle:jdk21-ubi-minimal \
+            bash -c "chmod +x ./gradlew && ./gradlew build --no-daemon -x test"
 
       - name: Log in to GHCR
         if: steps.check_changes.outputs.changed == 'true'
@@ -97,13 +94,15 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}/${{ matrix.app }}
-          # 👇 핵심 수정: :latest 태그를 자동으로 생성하지 않도록 설정합니다.
           flavor: |
             latest=false
-          # Git 커밋 해시의 앞 7자리를 태그로 사용합니다.
           tags: |
             type=sha,prefix=,format=short
 
+      # 3. 최종 이미지 빌드 및 푸시
+      #    - 이제 'Populate Gradle Cache' 단계에서 업데이트된 캐시가
+      #      빌드 컨텍스트('apps/backend/') 내에 존재하므로,
+      #      Dockerfile의 'COPY .gradle-cache ...' 명령이 성공적으로 실행됩니다.
       - name: Build and push Docker image
         if: steps.check_changes.outputs.changed == 'true'
         uses: docker/build-push-action@v6
@@ -114,10 +113,11 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/arm64
+          # Docker의 자체 빌드 캐시도 계속 활용합니다.
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # 👇 --- GitOps 레포지토리 자동 업데이트 단계 --- 👇
+      # ... (GitOps 업데이트 부분은 변경 없음) ...
       - name: Update Kubernetes deployment manifest
         if: steps.check_changes.outputs.changed == 'true'
         env:
