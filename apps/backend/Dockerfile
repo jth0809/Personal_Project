@@ -27,7 +27,9 @@ COPY src ./src
 
 # 소스 코드를 컴파일하고 최종 빌드를 실행합니다.
 # 의존성은 이전 레이어에 캐시되어 있으므로, 여기서는 컴파일 작업에만 집중합니다.
-RUN ./gradlew build -x test
+RUN --mount=type=cache,target=/root/.gradle \
+    --mount=type=cache,target=/app/.gradle \
+    ./gradlew build -x test
 
 
 # ===================================================================

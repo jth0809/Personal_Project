@@ -86,7 +86,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/arm64
           # Docker의 자체 빌드 캐시도 계속 활용합니다.
-          cache-from: type=gha
+          cache-from: type=gha,scope=${{ matrix.app }}
           cache-to: type=gha,mode=max
 
       # ... (GitOps 업데이트 부분은 변경 없음) ...
