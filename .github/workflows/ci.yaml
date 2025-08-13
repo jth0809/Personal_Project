@@ -33,11 +33,16 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-static-v1 # Simplified key for diagnosis
+            apps/backend/test-cache-dir # A new, simple directory for testing actions/cache
+          key: ${{ runner.os }}-test-cache-v1 # A new, simple key for testing actions/cache
           restore-keys: |
-            ${{ runner.os }}-gradle-static-
+            ${{ runner.os }}-test-cache-
+
+      - name: Create test cache file
+        if: ${{ matrix.app == 'backend' }}
+        run: |
+          mkdir -p apps/backend/test-cache-dir
+          echo "Hello from cache" > apps/backend/test-cache-dir/test.txt
 
       # 1. 변경된 파일 목록을 가져옵니다.
       - name: Get changed files
@@ -66,13 +71,6 @@ jobs:
           find apps/backend/gradle -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum
           echo "Hashing apps/backend/gradlew file:"
           sha256sum apps/backend/gradlew
-
-      - name: Copy Gradle cache to build context
-        if: ${{ matrix.app == 'backend' }}
-        run: |
-          mkdir -p apps/backend/.gradle-cache
-          cp -r ~/.gradle/caches apps/backend/.gradle-cache/
-          cp -r ~/.gradle/wrapper apps/backend/.gradle-cache/
 
       - name: Log in to GHCR
         if: steps.check_changes.outputs.changed == 'true'
@@ -138,8 +136,8 @@ jobs:
           DEPLOYMENT_FILE="./clusters/my-cluster/apps/${{ matrix.app }}.yaml"
           Job_FILE="./clusters/my-cluster/apps/${{ matrix.app }}_job.yaml"
           NEW_IMAGE="ghcr.io/${{ github.repository_owner }}/personal_project/${{ matrix.app }}:${IMAGE_TAG}"
-          yq -i '(select(.kind == "Deployment") | .spec.template.spec.containers[0].image) = "'${NEW_IMAGE}'"' $DEPLOYMENT_FILE
-          yq -i '(select(.kind == "Job") | .spec.template.spec.containers[0].image) = "'${NEW_IMAGE}'"' $Job_FILE
+          yq -i "(select(.kind == \"Deployment\") | .spec.template.spec.containers[0].image) = \"${NEW_IMAGE}\"" $DEPLOYMENT_FILE
+          yq -i "(select(.kind == \"Job\") | .spec.template.spec.containers[0].image) = \"${NEW_IMAGE}\"" $Job_FILE
 
           # 4. 변경사항 커밋 및 푸시
           git config user.name "GitHub Actions Bot"
@@ -148,4 +146,3 @@ jobs:
           git add $Job_FILE
           git commit -m "ci: Update ${{ matrix.app }} image to tag ${IMAGE_TAG}"
           git push
-
