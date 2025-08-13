@@ -29,7 +29,7 @@ public class Review {
 
     @NotBlank
     @Lob // CLOB 타입으로 매핑하여 긴 텍스트 저장 가능
-    @Column(nullable = false)
+    @Column(name = "review_comment", nullable = false) // Oracle 예약어 'COMMENT'와의 충돌 방지
     private String comment;
 
     @ManyToOne(fetch = FetchType.LAZY)
