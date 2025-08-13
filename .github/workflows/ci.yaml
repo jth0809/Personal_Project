@@ -67,6 +67,13 @@ jobs:
           echo "Hashing apps/backend/gradlew file:"
           sha256sum apps/backend/gradlew
 
+      - name: Copy Gradle cache to build context
+        if: ${{ matrix.app == 'backend' }}
+        run: |
+          mkdir -p apps/backend/.gradle-cache
+          cp -r ~/.gradle/caches apps/backend/.gradle-cache/
+          cp -r ~/.gradle/wrapper apps/backend/.gradle-cache/
+
       - name: Log in to GHCR
         if: steps.check_changes.outputs.changed == 'true'
         uses: docker/login-action@v3
