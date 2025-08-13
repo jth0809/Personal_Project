@@ -11,6 +11,7 @@ WORKDIR /app
 COPY gradlew .
 COPY build.gradle .
 COPY settings.gradle .
+COPY gradle ./gradle
 COPY src ./src
 COPY .gradle /app/.gradle
 
