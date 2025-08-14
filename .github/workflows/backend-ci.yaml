@@ -55,10 +55,6 @@ jobs:
         run: ./gradlew build -x test
         working-directory: ./apps/${{ matrix.app }}
 
-      - name: Check for JAR file
-        run: ls -R ./build/libs
-        working-directory: ./apps/backend
-
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
@@ -88,7 +84,7 @@ jobs:
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
-          context: ${{ matrix.app == 'backend' && './apps/backend' || '.' }}
+          context: ./apps/backend
           file: ./apps/${{ matrix.app }}/Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}

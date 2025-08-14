@@ -5,7 +5,7 @@ WORKDIR /app
 RUN addgroup --system spring && adduser --system --ingroup spring spring
 USER spring:spring
 
-COPY apps/backend/build/libs/*.jar app.jar
+COPY build/libs/*.jar app.jar
 
 EXPOSE 8080
 

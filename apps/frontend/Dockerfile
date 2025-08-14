@@ -4,8 +4,8 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup --system --gid 1001 nodejs \
+    adduser --system --uid 1001 nextjs
 
 COPY --chown=nextjs:nodejs apps/frontend/.next/standalone ./
 COPY --chown=nextjs:nodejs apps/frontend/public ./public
