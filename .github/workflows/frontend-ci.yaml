@@ -16,6 +16,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
     
     env:
       TURBO_TOKEN: ${{ secrets.TURBOREPO_TOKEN }}
