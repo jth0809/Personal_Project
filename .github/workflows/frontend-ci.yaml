@@ -1,0 +1,162 @@
+name: CI - Frontend
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'apps/frontend/**'
+      - 'package.json'
+      - 'package-lock.json'
+  pull_request:
+    paths:
+      - 'apps/frontend/**'
+      - 'package.json'
+      - 'package-lock.json'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBOREPO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+    
+    strategy:
+      matrix:
+        app: [frontend]
+
+    outputs:
+      image_tag: ${{ steps.meta.outputs.version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Set up Node.js and Cache Dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      # turbo build를 직접 실행하여 원격 캐시를 활용합니다.
+      - name: Build with Turborepo
+        run: npm run build
+
+      # 빌드 결과물(.next 폴더)을 다음 Docker 빌드 job으로 전달하기 위해 업로드합니다.
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build-artifact
+          path: |
+            apps/frontend/.next
+            apps/frontend/public
+            apps/frontend/package.json
+            apps/frontend/server.js
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Lowercase repository name
+        id: string-utils
+        uses: ASzc/change-string-case-action@v6
+        with:
+          string: ${{ github.repository }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/${{ matrix.app }}
+          flavor: |
+            latest=false
+          tags: |
+            type=sha,prefix=,format=short
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.app == 'backend' && './apps/backend' || '.' }}
+          file: ./apps/${{ matrix.app }}/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        app: [frontend]
+
+    env:
+      TURBO_TOKEN: ${{ secrets.TURBOREPO_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js and Cache Dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Tests
+        run: npm run test
+
+  deploy:
+    needs: [build, test]
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        app: [frontend]
+    
+    steps:
+      
+      - name: Update Kubernetes deployment manifest
+        env:
+          GITOPS_REPO: ${{ github.repository_owner }}/Personal_Project
+          GITOPS_PAT: ${{ secrets.GITOPS_PAT }}
+          IMAGE_TAG: ${{ needs.build.outputs.image_tag }}
+        run: |
+          # 1. 설정 레포지토리 클론
+          git clone https://x-access-token:${GITOPS_PAT}@github.com/${GITOPS_REPO}.git gitops
+          cd gitops
+
+          # 2. yq 설치 (YAML 수정을 위한 강력한 도구)
+          sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
+          
+          # 3. 배포 파일의 이미지 태그 수정
+          DEPLOYMENT_FILE="./clusters/my-cluster/apps/${{ matrix.app }}.yaml"
+          Job_FILE="./clusters/my-cluster/apps/${{ matrix.app }}_job.yaml"
+          NEW_IMAGE="ghcr.io/${{ github.repository_owner }}/personal_project/${{ matrix.app }}:${IMAGE_TAG}"
+          yq -i "(select(.kind == \"Deployment\") | .spec.template.spec.containers[0].image) = \"${NEW_IMAGE}\"" $DEPLOYMENT_FILE
+          yq -i "(select(.kind == \"Job\") | .spec.template.spec.containers[0].image) = \"${NEW_IMAGE}\"" $Job_FILE
+
+          # 4. 변경사항 커밋 및 푸시
+          git config user.name "GitHub Actions Bot"
+          git config user.email "actions@github.com"
+          git add $DEPLOYMENT_FILE
+          git add $Job_FILE
+          git commit -m "ci: Update ${{ matrix.app }} image to tag ${IMAGE_TAG}"
+          git push

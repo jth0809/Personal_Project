@@ -5,12 +5,13 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
+    "test": "turbo run test",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types"
   },
   "devDependencies": {
     "prettier": "^3.6.0",
-    "turbo": "^2.5.4",
+    "turbo": "latest",
     "typescript": "5.8.2"
   },
   "engines": {

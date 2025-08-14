@@ -1,48 +1,57 @@
-name: CI - Build and Push Changed Docker Images
+name: CI - Backend
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+    paths:
+      - 'apps/backend/**'
   pull_request:
-    branches:
-      - main
+    paths:
+      - 'apps/backend/**'
 
 jobs:
-  build-and-push:
+
+  build:
     runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.meta.outputs.version }}
     permissions:
       contents: read
       packages: write
     
     strategy:
       matrix:
-        app: [frontend, backend]
+        app: [backend]
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      
+      - name: Set up JDK 21 and Dependency Cache (via setup-java)
+        uses: actions/setup-java@v4
         with:
-          fetch-depth: 0
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+          cache-dependency-path: |
+            apps/${{ matrix.app }}/build.gradle
+            apps/${{ matrix.app }}/gradle.properties
+            apps/${{ matrix.app }}/settings.gradle
+            apps/${{ matrix.app }}/gradle/wrapper/gradle-wrapper.properties
 
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v46
-
-      - name: Check for changes in app path
-        id: check_changes
-        run: |
-          if (echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -q "apps/${{ matrix.app }}/") || \
-             (echo "${{ steps.changed-files.outputs.all_changed_files }}" | grep -q "packages/"); then
-            echo "Changes detected in ${{ matrix.app }} or shared packages. Proceeding to build."
-            echo "changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "No changes detected in ${{ matrix.app }} or shared packages. Skipping build."
-            echo "changed=false" >> $GITHUB_OUTPUT
-          fi
+      - name: Setup Project Compile Cache (via actions/cache)
+        uses: actions/cache@v4
+        with:
+          path: ./apps/backend/.gradle
+          key: ${{ runner.os }}-gradle-compile-${{ hashFiles('apps/backend/src/**/*.java') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-compile-
+      
+      - name: Build with Gradle
+        run: ./gradlew build -x test
+        working-directory: ./apps/${{ matrix.app }}
 
       - name: Log in to GHCR
-        if: steps.check_changes.outputs.changed == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -50,19 +59,16 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Lowercase repository name
-        if: steps.check_changes.outputs.changed == 'true'
         id: string-utils
         uses: ASzc/change-string-case-action@v6
         with:
           string: ${{ github.repository }}
 
       - name: Set up Docker Buildx
-        if: steps.check_changes.outputs.changed == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Extract metadata for Docker
         id: meta
-        if: steps.check_changes.outputs.changed == 'true'
         uses: docker/metadata-action@v5
         with:
           images: ghcr.io/${{ github.repository }}/${{ matrix.app }}
@@ -71,12 +77,7 @@ jobs:
           tags: |
             type=sha,prefix=,format=short
 
-      # 3. 최종 이미지 빌드 및 푸시
-      #    - 이제 'Populate Gradle Cache' 단계에서 업데이트된 캐시가
-      #      빌드 컨텍스트('apps/backend/') 내에 존재하므로,
-      #      Dockerfile의 'COPY .gradle-cache ...' 명령이 성공적으로 실행됩니다.
       - name: Build and push Docker image
-        if: steps.check_changes.outputs.changed == 'true'
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.app == 'backend' && './apps/backend' || '.' }}
@@ -85,17 +86,50 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           platforms: linux/arm64
-          # Docker의 자체 빌드 캐시도 계속 활용합니다.
-          cache-from: type=gha,scope=${{ matrix.app }}
+          cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      # ... (GitOps 업데이트 부분은 변경 없음) ...
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        app: [backend]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up JDK 21 and Dependency Cache (via setup-java)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+          cache-dependency-path: |
+            apps/${{ matrix.app }}/build.gradle
+            apps/${{ matrix.app }}/gradle.properties
+            apps/${{ matrix.app }}/settings.gradle
+            apps/${{ matrix.app }}/gradle/wrapper/gradle-wrapper.properties
+      
+      - name: Run Unit Tests
+        run: ./gradlew test
+        working-directory: ./apps/backend
+  
+  deploy:
+    needs: [build, test]
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        app: [backend]
+    
+    steps:
+      
       - name: Update Kubernetes deployment manifest
-        if: steps.check_changes.outputs.changed == 'true'
         env:
-          GITOPS_REPO: ${{ github.repository_owner }}/Personal_Project # 👈 설정 레포지토리 이름
+          GITOPS_REPO: ${{ github.repository_owner }}/Personal_Project
           GITOPS_PAT: ${{ secrets.GITOPS_PAT }}
-          IMAGE_TAG: ${{ steps.meta.outputs.version }} # metadata-action이 생성한 태그 (예: a1b2c3d)
+          IMAGE_TAG: ${{ needs.build.outputs.image_tag }}
         run: |
           # 1. 설정 레포지토리 클론
           git clone https://x-access-token:${GITOPS_PAT}@github.com/${GITOPS_REPO}.git gitops
