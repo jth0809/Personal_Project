@@ -20,7 +20,7 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: frontend
-          image: ghcr.io/jth0809/personal_project/frontend@sha256:3d6407d77d8fd7d3463bcbf5dab0ff77bed30facf2c842e3c06adc70767393de
+          image: ghcr.io/jth0809/personal_project/frontend:41a7de3
           ports:
             - containerPort: 3000
           envFrom:
