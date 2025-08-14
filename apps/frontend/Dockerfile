@@ -10,8 +10,6 @@ RUN adduser --system --uid 1001 nextjs
 COPY --chown=nextjs:nodejs apps/frontend/.next/standalone ./
 COPY --chown=nextjs:nodejs apps/frontend/public ./public
 COPY --chown=nextjs:nodejs apps/frontend/.next/static ./.next/static
-COPY --chown=nextjs:nodejs apps/frontend/package.json ./package.json
-COPY --chown=nextjs:nodejs apps/frontend/server.js ./server.js
 
 USER nextjs
 
