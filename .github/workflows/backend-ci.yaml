@@ -47,6 +47,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-compile-
       
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+        working-directory: ./apps/backend
+
       - name: Build with Gradle
         run: ./gradlew build -x test
         working-directory: ./apps/${{ matrix.app }}
@@ -111,6 +115,10 @@ jobs:
             apps/${{ matrix.app }}/settings.gradle
             apps/${{ matrix.app }}/gradle/wrapper/gradle-wrapper.properties
       
+      - name: Grant execute permission for gradlew
+        run: chmod +x ./gradlew
+        working-directory: ./apps/backend
+
       - name: Run Unit Tests
         run: ./gradlew test
         working-directory: ./apps/backend
