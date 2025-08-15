@@ -52,7 +52,7 @@ public class OrderController {
     @GetMapping("/history")
     public ResponseEntity<Page<OrderDto.HistoryResponse>> getOrderHistory(
         @AuthenticationPrincipal UserDetails userDetails,
-        @PageableDefault(size = 10, sort = "orderDate", direction = Sort.Direction.DESC) Pageable pageable
+        @PageableDefault(size = 10) Pageable pageable
         ) {
         String userEmail = userDetails.getUsername();
         Page<OrderDto.HistoryResponse> history = orderService.getOrderHistory(userEmail, pageable);

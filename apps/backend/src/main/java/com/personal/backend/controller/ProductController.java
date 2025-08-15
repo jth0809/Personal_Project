@@ -87,7 +87,7 @@ public class ProductController {
     public ResponseEntity<Page<ProductDto.Response>> getAllProducts(
         @RequestParam(required = false) String keyword,
         @Min(value = 0, message = "유효하지 않은 카테고리 ID입니다.") @RequestParam(required = false) Long categoryId,
-        @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
+        @PageableDefault(size = 10) Pageable pageable
         )
          {
         Page<ProductDto.Response> productsPage = productService.findProducts(keyword, categoryId, pageable);

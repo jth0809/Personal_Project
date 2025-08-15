@@ -18,7 +18,9 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +42,10 @@ public class OrderService {
 
     public Page<OrderDto.HistoryResponse> getOrderHistory(String userEmail, Pageable pageable) {
         //현재 사용자의 주문 내역을 DB에서 조회하여 DTO로 변환하는 로직
+        if (pageable.getSort().isUnsorted()) {
+            Sort defaultSort = Sort.by(Sort.Direction.DESC, "orderDate");
+            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), defaultSort);
+        }
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new EntityNotFoundException("사용자를 찾을 수 없습니다."));
         Page<Order> ordersPage = orderRepository.findByUser(user, pageable);

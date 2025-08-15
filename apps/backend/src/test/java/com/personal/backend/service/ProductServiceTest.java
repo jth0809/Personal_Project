@@ -25,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 import java.util.Optional;
@@ -172,7 +173,7 @@ class ProductServiceTest {
     void findProducts_FindAll_WithPagination() {
         // given
         // 1. 테스트용 Pageable 객체를 생성합니다. (0번째 페이지, 10개씩)
-        Pageable pageable = PageRequest.of(0, 10);
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "id"));
         
         // 2. Mock Repository가 반환할 데이터 목록을 준비합니다.
         List<Product> productList = List.of(dummyProduct);
@@ -198,7 +199,7 @@ class ProductServiceTest {
     void findProducts_FindByCategory_WithPagination() {
         // given
         Long categoryId = 1L;
-        Pageable pageable = PageRequest.of(0, 10);
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "id"));
         List<Product> productList = List.of(dummyProduct);
         Page<Product> productPage = new PageImpl<>(productList, pageable, productList.size());
 
@@ -218,7 +219,7 @@ class ProductServiceTest {
     void findProducts_SearchByKeyword_WithPagination() {
         // given
         String keyword = "노트북";
-        Pageable pageable = PageRequest.of(0, 10);
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "id"));
         
         // Mock Repository가 반환할 데이터 준비
         List<Product> productList = List.of(dummyProduct);
