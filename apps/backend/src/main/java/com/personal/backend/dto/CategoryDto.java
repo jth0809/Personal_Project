@@ -2,11 +2,13 @@ package com.personal.backend.dto;
 
 import com.personal.backend.domain.Category;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 public class CategoryDto {
 
     /**
      * 클라이언트에게 카테고리 정보를 응답으로 보낼 때 사용하는 DTO
      */
+    @Schema(name = "CategoryResponse", description = "카테고리 응답 DTO")
     public record Response(
             Long id,
             String name

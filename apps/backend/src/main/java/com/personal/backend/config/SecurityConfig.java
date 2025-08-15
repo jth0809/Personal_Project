@@ -56,7 +56,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         // 공개할 경로들을 명시적으로 지정
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/products/**", "/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/products/**", "/categories/**","/qna/**","/reviews/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         
                         // 위에서 지정한 경로 외의 모든 요청은 인증을 요구

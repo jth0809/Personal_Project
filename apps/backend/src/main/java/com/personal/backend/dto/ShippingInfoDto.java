@@ -2,8 +2,10 @@ package com.personal.backend.dto;
 
 import com.personal.backend.domain.ShippingInfo;
 
-public class ShippingInfoDto {
+import io.swagger.v3.oas.annotations.media.Schema;
 
+public class ShippingInfoDto {
+    @Schema(name = "ShippingResponse", description = "리뷰 응답")
     public record Response(
             String shippingMethod,
             Integer shippingFee,

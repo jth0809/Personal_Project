@@ -9,11 +9,13 @@ import com.personal.backend.domain.User;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import io.swagger.v3.oas.annotations.media.Schema;
 public class ProductDto {
 
     /**
      * 클라이언트가 '상품 생성'을 요청할 때 사용하는 DTO
      */
+    @Schema(name = "ProductCreateRequest", description = "상품 생성 요청 DTO")
     public record CreateRequest(
         @NotBlank(message = "상품 이름은 필수 입력 항목입니다.")  
         String name,
@@ -44,6 +46,7 @@ public class ProductDto {
     /**
      * 클라이언트가 '상품 정보 수정'을 요청할 때 사용하는 DTO
      */
+    @Schema(name = "ProductUpdateRequest", description = "상품 수정 요청 DTO")
     public record UpdateRequest(
         @NotBlank(message = "상품 이름은 필수입니다.")    
         String name,
@@ -62,6 +65,7 @@ public class ProductDto {
     /**
      * 클라이언트에게 '상품 목록'이나 '단일 상품 정보'를 응답으로 보낼 때 사용하는 DTO
      */
+    @Schema(name = "ProductResponse", description = "상품 조회 응답 DTO")
     public record Response(
             Long id,
             String name,

@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public class PageableDto {
+    
     public record PageableRequest(
         @Parameter(description = "페이지 번호 (0..N)", schema = @Schema(type = "integer", defaultValue = "0"))
         Integer page,
