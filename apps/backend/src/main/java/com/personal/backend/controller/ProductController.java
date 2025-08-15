@@ -1,5 +1,6 @@
 package com.personal.backend.controller;
 
+import com.personal.backend.dto.PageableDto;
 import com.personal.backend.dto.ProductDto;
 import com.personal.backend.dto.ShippingInfoDto;
 import com.personal.backend.service.ProductService;
@@ -10,10 +11,9 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -87,9 +87,9 @@ public class ProductController {
     public ResponseEntity<Page<ProductDto.Response>> getAllProducts(
         @RequestParam(required = false) String keyword,
         @Min(value = 0, message = "유효하지 않은 카테고리 ID입니다.") @RequestParam(required = false) Long categoryId,
-        @PageableDefault(size = 10, sort = "id", direction = Sort.Direction.DESC) Pageable pageable
-        )
-         {
+        @ParameterObject PageableDto.PageableRequest pageableRequest
+        ){
+        Pageable pageable = pageableRequest.toPageable();
         Page<ProductDto.Response> productsPage = productService.findProducts(keyword, categoryId, pageable);
         return ResponseEntity.ok(productsPage); // 조회된 상품 목록과 함께 200 OK 응답을 반환합니다.
     }

@@ -1,6 +1,7 @@
 package com.personal.backend.controller;
 
 import com.personal.backend.dto.OrderDto;
+import com.personal.backend.dto.PageableDto;
 import com.personal.backend.service.OrderService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,10 +11,9 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -52,8 +52,9 @@ public class OrderController {
     @GetMapping("/history")
     public ResponseEntity<Page<OrderDto.HistoryResponse>> getOrderHistory(
         @AuthenticationPrincipal UserDetails userDetails,
-        @PageableDefault(size = 10, sort = "orderDate", direction = Sort.Direction.DESC) Pageable pageable
-        ) {
+        @ParameterObject PageableDto.PageableRequest pageableRequest
+        ){
+        Pageable pageable = pageableRequest.toPageable();
         String userEmail = userDetails.getUsername();
         Page<OrderDto.HistoryResponse> history = orderService.getOrderHistory(userEmail, pageable);
         return ResponseEntity.ok(history);

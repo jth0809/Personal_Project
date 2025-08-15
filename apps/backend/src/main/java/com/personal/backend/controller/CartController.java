@@ -36,7 +36,7 @@ public class CartController {
      * 장바구니에 상품을 추가하는 API
      * POST /api/cart/items
      */
-    @Operation(summary = "장바구니 추가", description = "장바구니 추가 API")
+    @Operation(summary = "장바구니 상품 추가", description = "장바구니 상품 추가 API")
     @PostMapping("/items")
     public ResponseEntity<CartDto.CartResponse> addItemToCart(
             @Valid @RequestBody CartDto.AddItemRequest request,

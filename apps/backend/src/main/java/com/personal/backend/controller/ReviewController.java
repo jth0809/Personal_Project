@@ -1,14 +1,16 @@
 package com.personal.backend.controller;
 
+import com.personal.backend.dto.PageableDto;
 import com.personal.backend.dto.ReviewDto;
 import com.personal.backend.service.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,7 +28,9 @@ public class ReviewController {
     @GetMapping("/product/{productId}")
     public ResponseEntity<Page<ReviewDto.Response>> getReviews(
             @PathVariable Long productId,
-            @PageableDefault(size = 10) Pageable pageable) {
+            @ParameterObject PageableDto.PageableRequest pageableRequest
+        ){
+        Pageable pageable = pageableRequest.toPageable();
         Page<ReviewDto.Response> reviews = reviewService.getReviewsByProductId(productId, pageable);
         return ResponseEntity.ok(reviews);
     }
