@@ -19,7 +19,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -117,7 +116,7 @@ class OrderServiceTest {
         // given
         String userEmail = "test@user.com";
         // 1. 테스트용 Pageable 객체 생성
-        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "orderDate"));
+        Pageable pageable = PageRequest.of(0, 10);
         
         // 2. Mock Repository가 반환할 Page<Order> 객체 생성
         List<Order> orderList = List.of(dummyOrder);

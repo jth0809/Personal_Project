@@ -21,9 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -98,10 +96,6 @@ public class ProductService {
 
     public Page<ProductDto.Response> findProducts(String keyword, Long categoryId, Pageable pageable) {
         Page<Product> products;
-        if (pageable.getSort().isUnsorted()) {
-            Sort defaultSort = Sort.by(Sort.Direction.DESC, "id");
-            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), defaultSort);
-        }
         if (keyword != null && !keyword.trim().isEmpty()) {
             products = productRepository.findByNameContaining(keyword, pageable);
         } else if (categoryId != null) {
