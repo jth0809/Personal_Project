@@ -4,6 +4,7 @@ import com.personal.backend.dto.CartDto;
 import com.personal.backend.service.CartService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class CartController {
      * GET /api/cart
      */
     @Operation(summary = "장바구니 조회", description = "장바구니 조회 API")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping
     public ResponseEntity<CartDto.CartResponse> getCart(@AuthenticationPrincipal UserDetails userDetails) {
         String userEmail = userDetails.getUsername();
@@ -37,6 +39,7 @@ public class CartController {
      * POST /api/cart/items
      */
     @Operation(summary = "장바구니 상품 추가", description = "장바구니 상품 추가 API")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/items")
     public ResponseEntity<CartDto.CartResponse> addItemToCart(
             @Valid @RequestBody CartDto.AddItemRequest request,
@@ -51,6 +54,7 @@ public class CartController {
      * DELETE /api/cart/items/{itemId}
      */
     @Operation(summary = "장바구니 물건 삭제", description = "장바구니 물건 삭제 API")
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/items/{itemId}")
     public ResponseEntity<CartDto.CartResponse> removeItemFromCart(
             @PathVariable Long itemId,

@@ -5,6 +5,7 @@ import com.personal.backend.dto.PageableDto;
 import com.personal.backend.service.OrderService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -35,6 +36,7 @@ public class OrderController {
      * POST /api/orders
      */
     @Operation(summary = "주문 생성", description = "주문 생성 API")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping
     public ResponseEntity<OrderDto.CreateResponse> createOrder(
         @Valid @RequestBody OrderDto.CreateRequest request,
@@ -49,6 +51,7 @@ public class OrderController {
      * GET /api/orders/history
      */
     @Operation(summary = "모든 주문 조회", description = "모든 주문 조회 API")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/history")
     public ResponseEntity<Page<OrderDto.HistoryResponse>> getOrderHistory(
         @AuthenticationPrincipal UserDetails userDetails,
@@ -65,6 +68,7 @@ public class OrderController {
      * GET /api/orders/{orderId}
      */
     @Operation(summary = "주문 상세 조회", description = "주문 상세 조회 API")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderDto.HistoryResponse> getOrderDetails(
             @Min(value = 0, message = "유효하지 않은 주문 ID입니다.") @PathVariable Long orderId,
@@ -79,6 +83,7 @@ public class OrderController {
      * DELETE /api/orders/{orderId}
      */
     @Operation(summary = "주문 취소", description = "주문 취소 API")
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{orderId}")
     public ResponseEntity<OrderDto.HistoryResponse> cancelOrder(
             @Min(value = 0, message = "유효하지 않은 주문 ID입니다.") @PathVariable Long orderId,

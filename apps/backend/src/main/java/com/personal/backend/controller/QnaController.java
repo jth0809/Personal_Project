@@ -4,6 +4,7 @@ import com.personal.backend.dto.PageableDto;
 import com.personal.backend.dto.QnaDto;
 import com.personal.backend.service.QnaService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class QnaController {
     }
 
     @Operation(summary = "질문 작성", description = "상품에 대한 새로운 질문을 작성합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/questions")
     public ResponseEntity<QnaDto.Response> createQuestion(
             @Valid @RequestBody QnaDto.CreateRequest request,
@@ -47,6 +49,7 @@ public class QnaController {
     }
 
     @Operation(summary = "답변 작성 (관리자 전용)", description = "Q&A에 대한 답변을 작성합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/{qnaId}/answers")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<QnaDto.Response> addAnswer(
@@ -57,6 +60,7 @@ public class QnaController {
     }
 
     @Operation(summary = "Q&A 삭제", description = "자신이 작성한 질문을 삭제합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{qnaId}")
     public ResponseEntity<Void> deleteQna(
             @PathVariable Long qnaId,

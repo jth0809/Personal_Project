@@ -4,6 +4,7 @@ import com.personal.backend.dto.PageableDto;
 import com.personal.backend.dto.ReviewDto;
 import com.personal.backend.service.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class ReviewController {
     }
 
     @Operation(summary = "리뷰 작성", description = "상품에 대한 새로운 리뷰를 작성합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping
     public ResponseEntity<ReviewDto.Response> createReview(
             @Valid @RequestBody ReviewDto.CreateRequest request,
@@ -46,6 +48,7 @@ public class ReviewController {
     }
 
     @Operation(summary = "리뷰 수정", description = "자신이 작성한 리뷰를 수정합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/{reviewId}")
     public ResponseEntity<ReviewDto.Response> updateReview(
             @PathVariable Long reviewId,
@@ -57,6 +60,7 @@ public class ReviewController {
     }
 
     @Operation(summary = "리뷰 삭제", description = "자신이 작성한 리뷰를 삭제합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<Void> deleteReview(
             @PathVariable Long reviewId,
