@@ -3,6 +3,7 @@ package com.personal.backend.controller;
 import com.personal.backend.dto.ImageDto;
 import com.personal.backend.config.oci.OciUploadService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -34,6 +35,7 @@ public class ImageController {
     private final OciUploadService ociUploadService;
 
     @Operation(summary = "단일 이미지 업로드 URL 생성", description = "OCI Object Storage에 직접 업로드할 수 있는 임시 URL을 발급합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/generate-upload-url")
     public ResponseEntity<ImageDto.GenerateUploadUrlResponse> generateUploadUrl(
             @Valid @RequestBody ImageDto.GenerateUploadUrlRequest request
@@ -42,6 +44,7 @@ public class ImageController {
         return ResponseEntity.ok(response);
     }
     @Operation(summary = "다중 이미지 업로드 URL 생성", description = "OCI Object Storage에 직접 업로드할 수 있는 임시 URL을 발급합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/generate-upload-urls")
     public ResponseEntity<List<ImageDto.UploadInfoResponse>> generateUploadUrls(
             @Valid @RequestBody ImageDto.GenerateUploadUrlsRequest request
@@ -51,6 +54,7 @@ public class ImageController {
     }
 
     @Operation(summary = "이미지 삭제", description = "OCI Object Storage에서 이미지를 삭제하고 DB에서 이미지를 삭제합니다.")
+    @SecurityRequirement(name = "bearerAuth")
     @DeleteMapping("\"/{objectName}/products/{productId}\"")
     public ResponseEntity<Void> deleteImage(
         @Min(value = 0, message = "유효하지 않은 상품 ID입니다.") @PathVariable Long productId,

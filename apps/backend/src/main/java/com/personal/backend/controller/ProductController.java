@@ -6,6 +6,7 @@ import com.personal.backend.dto.ShippingInfoDto;
 import com.personal.backend.service.ProductService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -36,6 +37,7 @@ public class ProductController {
      */
     @Operation(summary = "상품 생성", description = "상품 생성 API")
     @PostMapping
+    @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> createProduct(
         @Valid @RequestBody ProductDto.CreateRequest request,
@@ -51,6 +53,7 @@ public class ProductController {
      */
     @Operation(summary = "상품 수정", description = "상품 수정 API")
     @PutMapping("/{productId}")
+    @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasRole('ADMIN')") // 오직 ADMIN 역할만 실행 가능
     public ResponseEntity<ProductDto.Response> updateProduct(
             @Min(value = 0, message = "유효하지 않은 상품 ID입니다.") @PathVariable Long productId,
@@ -68,6 +71,7 @@ public class ProductController {
      */
     @Operation(summary = "상품 삭제", description = "상품 삭제 API")
     @DeleteMapping("/{productId}")
+    @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasRole('ADMIN')") // 오직 ADMIN 역할만 실행 가능
     public ResponseEntity<Void> deleteProduct(
         @Min(value = 0, message = "유효하지 않은 상품 ID입니다.") @PathVariable Long productId,
