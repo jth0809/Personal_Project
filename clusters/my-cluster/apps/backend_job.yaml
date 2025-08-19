@@ -5,7 +5,6 @@ metadata:
   name: data-seed-job
   namespace: default
 spec:
-  ttlSecondsAfterFinished: 60
   backoffLimit: 2
   template:
     spec:
