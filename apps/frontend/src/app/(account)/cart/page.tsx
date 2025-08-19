@@ -2,7 +2,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useCart } from "@/hooks/useCart";
-import type { CartItemResponse } from "@/types/apiModels";
+import type { CartItemResponse } from "@/types/backend";
 
 /** 배열/문자열/널 모두를 안전한 문자열로 정규화 */
 function pickImage(src?: string | string[] | null): string {
@@ -46,9 +46,9 @@ export default function CartPage() {
           <ul className="space-y-3">
             {items.map((it, idx) => {
               // 고유 key: 서버가 중복 id를 줄 가능성까지 방어
-              const key = `${it.id}-${it.productId}-${idx}`;
+              const key = `${it.cartItemId}-${it.productId}-${idx}`;
               const imgSrc = pickImage(it.imageUrl);
-              const alt = it.name || "상품 이미지";
+              const alt = it.productName || "상품 이미지";
               return (
                 <li
                   key={key}
@@ -66,7 +66,7 @@ export default function CartPage() {
 
                   <div className="flex flex-1 items-center justify-between">
                     <div>
-                      <p className="font-medium">{it.name}</p>
+                      <p className="font-medium">{it.productName}</p>
                       <p className="text-sm text-gray-500">
                         수량 {it.quantity}
                       </p>
@@ -76,7 +76,7 @@ export default function CartPage() {
                         {(it.price * it.quantity).toLocaleString()}원
                       </p>
                       <button
-                        onClick={() => remove.mutate(it.id)}
+                        onClick={() => remove.mutate(it.cartItemId)}
                         className="mt-1 text-sm text-gray-500 underline"
                       >
                         삭제

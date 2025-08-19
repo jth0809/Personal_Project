@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useProducts } from "@/hooks/useProducts";
 import { useCategories } from "@/hooks/useCategories";
@@ -17,7 +17,6 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
 type SortOrder = "ASC" | "DESC";
@@ -59,7 +58,7 @@ export default function HomePage() {
     categoryId,
     page,
     size,
-    sortBy,
+    sortBy: sortBy as "id" | "price" | "name" | undefined,
     sortOrder,
   });
 
@@ -75,19 +74,6 @@ export default function HomePage() {
   }, [keyword, categoryId, sortBy, sortOrder, page, router]);
 
   // ----- 표시용 요약
-  const totalText = useMemo(() => {
-    if (!data) return "";
-    const total = (data as any).totalElements ?? undefined; // 훅 타입에 totalElements가 노출되면 any 제거 가능
-    return typeof total === "number" ? `총 ${total.toLocaleString()}개` : "";
-  }, [data]);
-
-  const resetFilters = () => {
-    setKeyword("");
-    setCategoryId(undefined);
-    setSortBy("id");
-    setSortOrder("DESC");
-    setPage(0);
-  };
 
   return (
     <div className="space-y-6">

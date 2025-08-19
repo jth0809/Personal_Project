@@ -9,18 +9,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { uploadManyImmediately } from "@/lib/images";
-import type { ProductResponse } from "@/types/apiModels";
 import type {
-  CreateProductPayload,
-  UpdateProductPayload,
-} from "@/types/product";
+  ProductResponse,
+  ProductCreateRequest,
+  ProductUpdateRequest,
+} from "@/types/backend";
 
 const Schema = z.object({
   name: z.string().min(2, "2자 이상"),
   description: z.string().optional(),
-  price: z.preprocess((v) => Number(v), z.number().nonnegative()),
-  categoryId: z.preprocess((v) => Number(v), z.number().int().positive()),
-  stockQuantity: z.preprocess((v) => Number(v), z.number().int().nonnegative()),
+  price: z.coerce.number().nonnegative(),
+  categoryId: z.coerce.number().int().positive(),
+  stockQuantity: z.coerce.number().int().nonnegative(),
 });
 
 type ProductFormValues = z.infer<typeof Schema>;
@@ -33,19 +33,15 @@ export default function ProductForm({
   mode: "create" | "edit";
   initial?: ProductResponse;
   onSubmit: (
-    payload: CreateProductPayload | UpdateProductPayload,
+    payload: ProductCreateRequest | ProductUpdateRequest,
     ctx: { deletedImages: string[] }
   ) => Promise<void> | void;
 }) {
-  // 기존(서버에 이미 등록된) 이미지
-  const [existingImages, setExistingImages] = useState<string[]>(() =>
-    Array.isArray(initial?.imageUrl)
-      ? (initial?.imageUrl as any)
-      : initial?.imageUrl
-        ? [String(initial.imageUrl)]
-        : []
+  // 서버에 이미 저장된 이미지들
+  const [existingImages, setExistingImages] = useState<string[]>(
+    () => initial?.imageUrl ?? []
   );
-  // 이번 폼에서 새로 업로드된 이미지
+  // 방금 업로드한 이미지들(아직 서버 상품과 연결 전)
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [deletedImages, setDeletedImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -56,13 +52,14 @@ export default function ProductForm({
     formState: { errors, isSubmitting },
     reset,
   } = useForm<ProductFormValues>({
-    resolver: zodResolver(Schema) as any,
+    resolver: zodResolver(Schema),
     defaultValues: initial
       ? {
           name: initial.name,
           description: initial.description || initial.detailContent || "",
           price: initial.price,
-          categoryId: (initial as any).categoryId ?? 0,
+          // ProductResponse에는 categoryId가 없으므로 기본값은 0 → 제출 시 유효성 검사로 강제
+          categoryId: 0,
           stockQuantity: initial.stockQuantity ?? 0,
         }
       : {
@@ -75,42 +72,30 @@ export default function ProductForm({
   });
 
   useEffect(() => {
-    if (initial) {
-      reset({
-        name: initial.name,
-        description: initial.description || initial.detailContent || "",
-        price: initial.price,
-        categoryId: (initial as any).categoryId ?? 0,
-        stockQuantity: initial.stockQuantity ?? 0,
-      });
-      const imgs = Array.isArray(initial.imageUrl)
-        ? (initial.imageUrl as any)
-        : initial.imageUrl
-          ? [String(initial.imageUrl)]
-          : [];
-      setExistingImages(imgs);
-      setUploadedImages([]); // 수정화면에서 새로 들어온 업로드는 리셋
-      setDeletedImages([]);
-    }
+    if (!initial) return;
+    reset({
+      name: initial.name,
+      description: initial.description || initial.detailContent || "",
+      price: initial.price,
+      categoryId: 0,
+      stockQuantity: initial.stockQuantity ?? 0,
+    });
+    setExistingImages(initial.imageUrl ?? []);
+    setUploadedImages([]);
+    setDeletedImages([]);
   }, [initial, reset]);
 
-  const onRemoveExisting = async (img: string) => {
-    if (!initial) {
-      setExistingImages((arr) => arr.filter((u) => u !== img));
-      return;
-    }
-    // 서버에 연결된 기존 이미지 즉시 삭제
-    // await deleteProductImage(initial.id, img);
+  const onRemoveExisting = (img: string) => {
+    // 수정 모드라도 즉시 서버 삭제를 호출하지 않고, UI에서만 제거하고 기록만 남김
     setExistingImages((arr) => arr.filter((u) => u !== img));
     setDeletedImages((arr) => (arr.includes(img) ? arr : [...arr, img]));
   };
 
   const onRemoveUploaded = (img: string) => {
-    // 새 업로드건은 서버에 아직 연결 전이므로 클라이언트 배열에서만 제거
     setUploadedImages((arr) => arr.filter((u) => u !== img));
   };
 
-  // 파일 선택 → 즉시 업로드
+  // 파일 선택 → 즉시 업로드(이미지 API → presigned PUT → imageUrl 확보)
   const onFilesSelected: React.ChangeEventHandler<HTMLInputElement> = async (
     e
   ) => {
@@ -131,17 +116,17 @@ export default function ProductForm({
   };
 
   const submit = handleSubmit(async (values) => {
-    // 업로드 중이면 제출 방지
-    if (isUploading) return;
+    if (isUploading) return; // 업로드 중엔 제출 방지
 
-    const payload: CreateProductPayload = {
+    const payload: ProductCreateRequest | ProductUpdateRequest = {
       name: values.name,
       description: values.description || "",
       price: values.price,
-      imageUrl: [...existingImages, ...uploadedImages], // 즉시 업로드한 URL 그대로 사용
+      imageUrl: [...existingImages, ...uploadedImages],
       categoryId: values.categoryId,
       stockQuantity: values.stockQuantity,
     };
+
     await onSubmit(payload, { deletedImages });
   });
 
@@ -159,6 +144,7 @@ export default function ProductForm({
             <p className="text-xs text-red-600">{errors.name.message}</p>
           )}
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="price">가격(원)</Label>
           <Input id="price" type="number" min={0} {...register("price")} />
@@ -166,6 +152,7 @@ export default function ProductForm({
             <p className="text-xs text-red-600">{errors.price.message}</p>
           )}
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="categoryId">카테고리</Label>
           <Input
@@ -178,6 +165,7 @@ export default function ProductForm({
             <p className="text-xs text-red-600">{errors.categoryId.message}</p>
           )}
         </div>
+
         <div className="space-y-2">
           <Label htmlFor="stockQuantity">재고</Label>
           <Input

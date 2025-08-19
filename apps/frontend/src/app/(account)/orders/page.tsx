@@ -17,20 +17,23 @@ export default function OrdersPage() {
             불러오지 못했습니다.
           </div>
         )}
-        {data && (data as any).content && (
+        {data && data.content && (
           <ul className="space-y-2">
-            {(data as any).content?.map((o: any) => (
+            {data.content.map((o) => (
               <li
-                key={o.id}
+                key={o.orderId}
                 className="flex items-center justify-between rounded-2xl border bg-white p-4"
               >
                 <div>
-                  <p className="font-medium">주문번호 #{o.id}</p>
+                  <p className="font-medium">주문번호 #{o.orderId}</p>
                   <p className="text-sm text-gray-500">
-                    {o.status} · {new Date(o.createdAt).toLocaleString()}
+                    {o.orderStatus} · {new Date(o.orderDate).toLocaleString()}
                   </p>
                 </div>
-                <Link href={`/orders/${o.id}`} className="text-sm underline">
+                <Link
+                  href={`/orders/${o.orderId}`}
+                  className="text-sm underline"
+                >
                   상세보기
                 </Link>
               </li>

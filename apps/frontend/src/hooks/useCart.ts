@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiClient";
-import type { CartResponse } from "@/types/apiModels";
+import type { CartResponse } from "@/types/backend";
 import { useCartBadge } from "@/store/cartStore";
 
 const sumQty = (data?: CartResponse | null) =>
@@ -62,7 +62,7 @@ export function useCart() {
       const prev = useCartBadge.getState().count;
       const cached = qc.getQueryData<CartResponse>(["cart"]);
       const targetQty =
-        cached?.items.find((i) => i.id === itemId)?.quantity ?? 0;
+        cached?.items.find((i) => i.cartItemId === itemId)?.quantity ?? 0;
       if (targetQty > 0) setBadge(prev - targetQty);
       return { prev };
     },

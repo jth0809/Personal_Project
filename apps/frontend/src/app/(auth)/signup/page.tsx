@@ -49,9 +49,7 @@ export default function SignupPage() {
         </button>
       </form>
       {signup.error && (
-        <p className="mt-3 text-sm text-red-600">
-          {(signup.error as any).message}
-        </p>
+        <p className="mt-3 text-sm text-red-600">{signup.error.message}</p>
       )}
     </div>
   );

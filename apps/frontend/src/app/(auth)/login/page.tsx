@@ -39,9 +39,7 @@ export default function LoginPage() {
         </button>
       </form>
       {login.error && (
-        <p className="mt-3 text-sm text-red-600">
-          {(login.error as any).message}
-        </p>
+        <p className="mt-3 text-sm text-red-600">{login.error.message}</p>
       )}
     </div>
   );

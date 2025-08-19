@@ -3,7 +3,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useAdminProduct } from "@/hooks/admin/useAdminProducts";
 import { useUpdateProduct } from "@/hooks/admin/useAdminProductMutations";
 import ProductForm from "@/components/admin/ProductForm";
-import type { UpdateProductPayload } from "@/types/product";
+import type { ProductUpdateRequest } from "@/types/backend";
 
 export default function ProductEditPage() {
   const params = useParams();
@@ -22,7 +22,7 @@ export default function ProductEditPage() {
       <ProductForm
         mode="edit"
         initial={data}
-        onSubmit={async (payload: UpdateProductPayload) => {
+        onSubmit={async (payload: ProductUpdateRequest) => {
           await update.mutateAsync(payload);
           router.push("/admin/products");
         }}

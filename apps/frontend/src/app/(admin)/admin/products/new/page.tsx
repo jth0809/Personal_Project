@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import ProductForm from "@/components/admin/ProductForm";
 import { useCreateProduct } from "@/hooks/admin/useAdminProductMutations";
+import { ProductCreateRequest } from "@/types/backend";
 
 export default function ProductCreatePage() {
   const router = useRouter();
@@ -13,7 +14,7 @@ export default function ProductCreatePage() {
       <ProductForm
         mode="create"
         onSubmit={async (payload) => {
-          await create.mutateAsync(payload);
+          await create.mutateAsync(payload as ProductCreateRequest);
           router.push("/admin/products");
         }}
       />

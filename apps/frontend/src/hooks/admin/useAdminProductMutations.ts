@@ -1,10 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiClient";
-import { CreateProductPayload, UpdateProductPayload } from "@/types/product";
+import { ProductCreateRequest, ProductUpdateRequest } from "@/types/backend";
 
 export function useCreateProduct() {
   const qc = useQueryClient();
-  return useMutation<void, Error, CreateProductPayload>({
+  return useMutation<void, Error, ProductCreateRequest>({
     mutationFn: (payload) =>
       apiFetch<void>(`/products`, {
         method: "POST",
@@ -19,7 +19,7 @@ export function useCreateProduct() {
 
 export function useUpdateProduct(id: number) {
   const qc = useQueryClient();
-  return useMutation<void, Error, UpdateProductPayload>({
+  return useMutation<void, Error, ProductUpdateRequest>({
     mutationFn: (payload) =>
       apiFetch<void>(`/products/${id}`, {
         method: "PUT",

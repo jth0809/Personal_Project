@@ -1,10 +1,10 @@
+import { ProductResponse } from "@/types/backend";
+
 // src/components/seo/ProductJsonLd.tsx
-export function ProductJsonLd({ product }: { product: any }) {
-  const images = Array.isArray(product.imageUrl)
-    ? product.imageUrl.filter((s: string) => typeof s === "string" && s.trim())
-    : typeof product.imageUrl === "string" && product.imageUrl.trim()
-      ? [product.imageUrl]
-      : undefined;
+export function ProductJsonLd({ product }: { product: ProductResponse }) {
+  const images = product.imageUrl?.filter(
+    (s: string) => typeof s === "string" && s.trim()
+  );
 
   const jsonLd = {
     "@context": "https://schema.org",

@@ -1,7 +1,6 @@
-import { ProductResponse } from "@/types/apiModels";
-import { Product } from "@/types/product"; // 기존 UI 모델 유지
+import { ProductResponse } from "@/types/backend";
 
-export function toUiProduct(p: ProductResponse): Product {
+export function toUiProduct(p: ProductResponse) {
   return {
     id: String(p.id),
     name: p.name,

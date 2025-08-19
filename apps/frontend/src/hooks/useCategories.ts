@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiClient";
-import { CategoryResponse } from "@/types/apiModels";
+import { CategoryResponse } from "@/types/backend";
 
 export const useCategories = () =>
   useQuery({

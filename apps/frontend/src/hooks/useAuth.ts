@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiClient";
-import { TokenResponse } from "@/types/apiModels";
+import { TokenResponse } from "@/types/backend";
 import { useAuthStore } from "@/store/authStore";
 import { setAuthCookie } from "@/lib/authToken";
 

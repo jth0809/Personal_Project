@@ -16,7 +16,7 @@ export function getAuthCookie(): string | null {
 }
 
 // 아주 가벼운 JWT payload 디코더(선택)
-export function decodeJwtPayload<T = any>(token?: string | null): T | null {
+export function decodeJwtPayload<T = unknown>(token?: string | null): T | null {
   if (!token) return null;
   try {
     const payload = token.split(".")[1];
