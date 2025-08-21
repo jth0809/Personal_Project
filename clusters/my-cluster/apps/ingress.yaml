@@ -57,6 +57,13 @@ spec:
               name: backend-svc
               port:
                 number: 80
+        - path: /()(graphiql.*)
+          pathType: Prefix
+          backend:
+            service:
+              name: backend-svc
+              port:
+                number: 80
         # 그 외의 모든 경로는 프론트엔드 서비스로 연결합니다.
         - path: /()(.*)
           pathType: Prefix
