@@ -1,7 +1,6 @@
 package com.personal.backend.service;
 
 import com.personal.backend.domain.Cart;
-import com.personal.backend.domain.CartItem;
 import com.personal.backend.domain.Order;
 import com.personal.backend.domain.OrderItem;
 import com.personal.backend.domain.OrderStatus;
@@ -24,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -212,7 +212,7 @@ public class OrderService {
     @Transactional
     public void processPostPayment(String pgOrderId) {
     // 1. pgOrderId로 방금 결제가 완료된 주문(Order)을 찾습니다.
-        Order order = orderRepository.findByPgOrderId(pgOrderId)
+        Order order = findByPgOrderId(pgOrderId)
                 .orElseThrow(() -> new EntityNotFoundException("주문을 찾을 수 없습니다."));
         
         order.processPayment();
@@ -228,6 +228,10 @@ public class OrderService {
                 
         cart.removeItems(orderedProductIds);
         cartRepository.save(cart);
+    }
+
+    public Optional<Order> findByPgOrderId(String pgOrderId) {
+        return orderRepository.findByPgOrderId(pgOrderId);
     }
 }
 

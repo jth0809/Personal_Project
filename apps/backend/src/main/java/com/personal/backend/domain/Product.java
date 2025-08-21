@@ -1,7 +1,9 @@
 package com.personal.backend.domain;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 // 👇 1. 'javax.persistence'가 아닌 'jakarta.persistence'를 사용해야 합니다.
 import jakarta.persistence.*;
@@ -26,8 +28,7 @@ public class Product {
     )
     private Long id;
 
-    // 👇 4. 프론트엔드 요구사항에 맞는 실제 컬럼들을 추가합니다.
-    @Column(nullable = false) // NOT NULL 제약조건
+    @Column(nullable = false)
     private String name;
 
     private String description;
@@ -52,8 +53,29 @@ public class Product {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(columnDefinition = "integer default 0")
+    private int likeCount = 0;
+
+    @Column(columnDefinition = "integer default 0")
+    private int reviewCount = 0;
+
+    @Column(columnDefinition = "bigint default 0")
+    private long totalRatingScore = 0L;
+    
+    @Column(columnDefinition = "double default 0.0")
+    private double averageRating = 0.0;
+    
+    @Column(columnDefinition = "double default 0.0")
+    private double discountRate = 0.0;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProductOption> options = new ArrayList<>();
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<ProductTag> productTags = new HashSet<>();
+
     @Builder
-    public Product(String name, String description, int price, List<String> imageUrl, Category category, User user, int stockQuantity) {
+    public Product(String name, String description, int price, List<String> imageUrl, Category category, User user, int stockQuantity, double discountRate) {
         this.name = name;
         this.description = description;
         this.price = price;
@@ -61,15 +83,25 @@ public class Product {
         this.category = category;
         this.user = user;
         this.stockQuantity = stockQuantity;
+        this.discountRate = discountRate;
     }
 
-    public void updateDetails(String name, String description, int price, List<String> imageUrl, Category category, int stockQuantity) {
+    public void updateDetails(String name, String description, int price, List<String> imageUrl, Category category, int stockQuantity, double discountRate) {
         this.name = name;
         this.description = description;
         this.price = price;
         this.imageUrl = imageUrl;
         this.category = category;
         this.stockQuantity = stockQuantity;
+        this.discountRate = discountRate;
+    }
+
+    public int getOriginalPrice() {
+        return this.price;
+    }
+
+    public int getDiscountedPrice() {
+        return (int) (this.price * (1 - this.discountRate));
     }
 
     public void setCategory(Category category) {
@@ -100,6 +132,30 @@ public class Product {
      */
     public void increaseStock(int quantity) {
         this.stockQuantity += quantity;
+    }
+
+    public void increaseLikeCount() { this.likeCount++; }
+    
+    public void decreaseLikeCount() { this.likeCount = Math.max(0, this.likeCount - 1); }
+    
+    public void addReview(int rating) {
+        this.totalRatingScore += rating;
+        this.reviewCount++;
+        this.updateAverageRating(); // 평균 평점 재계산
+    }
+
+    public void removeReview(int rating) {
+        this.totalRatingScore = Math.max(0, this.totalRatingScore - rating);
+        this.reviewCount = Math.max(0, this.reviewCount - 1);
+        this.updateAverageRating(); // 평균 평점 재계산
+    }
+
+    private void updateAverageRating() {
+        if (this.reviewCount == 0) {
+            this.averageRating = 0.0;
+        } else {
+            this.averageRating = (double) this.totalRatingScore / this.reviewCount;
+        }
     }
 
 }

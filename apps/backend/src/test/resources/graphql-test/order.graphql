@@ -1,0 +1,66 @@
+# Orders
+query MyOrders($page: Int, $size: Int) {
+  myOrders(page: $page, size: $size) {
+    content {
+      id
+      status
+    }
+  }
+}
+
+
+query Order($id: ID!) {
+  order(id: $id) {
+    id
+    status
+  }
+}
+
+mutation CreateOrder($input: OrderInput!) {
+  createOrder(input: $input) {
+    id
+    status
+  }
+}
+
+mutation CancelOrder($orderId: ID!, $reason: String!) {
+  cancelOrder(orderId: $orderId, reason: $reason) {
+    id
+    status
+  }
+}
+
+# Cart
+query MyCart {
+  myCart {
+    items {
+      id
+      product { name }
+    }
+    totalPrice
+  }
+}
+
+mutation AddItemToCart($productId: ID!, $quantity: Int!) {
+  addItemToCart(productId: $productId, quantity: $quantity) {
+    totalPrice
+  }
+}
+
+mutation RemoveCartItem($cartItemId: ID!) {
+  removeCartItem(cartItemId: $cartItemId) {
+    items {
+      id
+    }
+    totalPrice
+  }
+}
+
+# Payment
+mutation ConfirmTossPayment($input: PaymentVerificationInput!) {
+  confirmTossPayment(input: $input) {
+    orderId
+    status
+    totalAmount
+  }
+}

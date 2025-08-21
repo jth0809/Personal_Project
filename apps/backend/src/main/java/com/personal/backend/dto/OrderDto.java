@@ -44,7 +44,7 @@ public class OrderDto {
 
     @Schema(name = "OrderHistoryResponse", description = "주문 내역 응답")
     public record HistoryResponse(
-            Long orderId,
+            Long id,
             LocalDateTime orderDate,
             String orderStatus,
             List<OrderItemResponse> orderItems

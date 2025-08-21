@@ -5,6 +5,11 @@ import com.personal.backend.domain.UserRole;
 import com.personal.backend.dto.UserDto;
 import com.personal.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,5 +40,13 @@ public class UserService {
                 .build();
         
         userRepository.save(newUser);
+    }
+
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    public List<User> findUsersByEmailIn(Set<String> emails) {
+        return userRepository.findByEmailIn(emails);
     }
 }

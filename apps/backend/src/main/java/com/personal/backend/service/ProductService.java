@@ -1,24 +1,19 @@
 package com.personal.backend.service;
 
-import com.personal.backend.domain.Category;
-import com.personal.backend.domain.Product;
-import com.personal.backend.domain.ProductDetail;
-import com.personal.backend.domain.User;
-import com.personal.backend.domain.ShippingInfo;
+import com.personal.backend.domain.*;
 import com.personal.backend.dto.CategoryDto;
 import com.personal.backend.dto.ProductDto;
 import com.personal.backend.dto.ShippingInfoDto;
-import com.personal.backend.repository.CategoryRepository;
-import com.personal.backend.repository.ProductDetailRepository;
-import com.personal.backend.repository.ProductRepository;
-import com.personal.backend.repository.UserRepository;
-import com.personal.backend.repository.ShippingInfoRepository;
+import com.personal.backend.repository.*;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,6 +30,7 @@ public class ProductService {
     private final UserRepository userRepository;
     private final ProductDetailRepository productDetailRepository;
     private final ShippingInfoRepository shippingInfoRepository;
+    private final ProductLikeRepository productLikeRepository;
 
     @Transactional
     public ProductDto.Response createProduct(ProductDto.CreateRequest request, String userEmail) {
@@ -74,10 +70,16 @@ public class ProductService {
             request.price(),
             request.imageUrl(),
             category,
-            request.stockQuantity()
+            request.stockQuantity(),
+            request.discountRate()
         );
 
-        return ProductDto.Response.fromEntity(product);
+        Set<Long> likedProductIds = getLikedProductIds(userEmail);
+        String detailContent = productDetailRepository.findById(productId)
+                                .map(ProductDetail::getContent)
+                                .orElse(null);
+
+        return ProductDto.Response.from(product, likedProductIds.contains(productId), detailContent, product.getOptions(), product.getProductTags().stream().map(ProductTag::getTag).collect(Collectors.toList()));
     }
 
     @Transactional
@@ -94,7 +96,7 @@ public class ProductService {
         productRepository.deleteById(productId);
     }
 
-    public Page<ProductDto.Response> findProducts(String keyword, Long categoryId, Pageable pageable) {
+    public Page<ProductDto.Response> findProducts(String keyword, Long categoryId, Pageable pageable, String userEmail) {
         Page<Product> products;
         if (keyword != null && !keyword.trim().isEmpty()) {
             products = productRepository.findByNameContaining(keyword, pageable);
@@ -104,16 +106,21 @@ public class ProductService {
             products = productRepository.findAll(pageable);
         }
 
-        return products.map(ProductDto.Response::fromEntity);
+        Set<Long> likedProductIds = getLikedProductIds(userEmail);
+
+        return products.map(product -> ProductDto.Response.from(product, likedProductIds.contains(product.getId()), null, product.getOptions(), product.getProductTags().stream().map(ProductTag::getTag).collect(Collectors.toList())));
     }
 
-    public ProductDto.Response findProductById(Long id) {
+    public ProductDto.Response findProductById(Long id, String userEmail) {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 상품을 찾을 수 없습니다. id=" + id));
 
         Optional<ProductDetail> productDetailOpt = productDetailRepository.findById(id);
+        String detailContent = productDetailOpt.map(ProductDetail::getContent).orElse(null);
 
-        return ProductDto.Response.fromEntity(product, productDetailOpt.orElse(null));
+        Set<Long> likedProductIds = getLikedProductIds(userEmail);
+
+        return ProductDto.Response.from(product, likedProductIds.contains(id), detailContent, product.getOptions(), product.getProductTags().stream().map(ProductTag::getTag).collect(Collectors.toList()));
     }
 
     public List<CategoryDto.Response> findAllCategories() {
@@ -127,5 +134,22 @@ public class ProductService {
         ShippingInfo shippingInfo = shippingInfoRepository.findById(productId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 상품의 배송 정보를 찾을 수 없습니다: " + productId));
         return ShippingInfoDto.Response.fromEntity(shippingInfo);
+    }
+
+    private Set<Long> getLikedProductIds(String userEmail) {
+        if (userEmail == null) {
+            return Collections.emptySet();
+        }
+        return userRepository.findByEmail(userEmail)
+                .map(user -> productLikeRepository.findLikedProductIdsByUserId(user.getId()))
+                .orElse(Collections.emptySet());
+    }
+
+    public List<Category> findCategoriesByNameIn(Set<String> names) {
+        return categoryRepository.findByNameIn(names);
+    }
+
+    public List<Product> findProductsByIdIn(Set<Long> ids) {
+        return productRepository.findAllById(ids);
     }
 }

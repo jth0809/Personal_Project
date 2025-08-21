@@ -19,6 +19,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -46,16 +47,16 @@ class ProductControllerTest {
     private ProductService productService;
 
     @Test
-    @WithMockUser
+    @WithMockUser(username = "test@user.com")
     @DisplayName("상품 목록 검색 API - 성공 (페이지네이션 적용)")
     void getAllProducts_SearchByKeyword_Success() throws Exception {
         // given
         String keyword = "노트북";
-        ProductDto.Response productResponse = new ProductDto.Response(1L, "상품1", "설명1", 1000, 10, List.of("img1.jpg"), "카테고리1", null);
+        ProductDto.Response productResponse = new ProductDto.Response(1L, "상품1", "설명1", 1000, 900, 10, List.of("img1.jpg"), "카테고리1", null, 0, 0, 0.0, 0.1, false, Collections.emptyList(), Collections.emptyList());
         Page<ProductDto.Response> responsePage = new PageImpl<>(List.of(productResponse));
 
         // Mock 설정: 서비스의 findProducts 메소드가 keyword와 함께 호출될 것을 예상
-        when(productService.findProducts(eq(keyword), eq(null), any(Pageable.class)))
+        when(productService.findProducts(eq(keyword), eq(null), any(Pageable.class), anyString()))
                 .thenReturn(responsePage);
 
         // when & then
@@ -67,15 +68,15 @@ class ProductControllerTest {
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(username = "test@user.com")
     @DisplayName("상품 목록 조회 API - 성공 (페이지네이션 적용)")
     void getAllProducts_Success_WithPagination() throws Exception {
         // given
-        ProductDto.Response productResponse = new ProductDto.Response(1L, "상품1", "설명1", 1000, 10, List.of("img1.jpg"), "카테고리1", null);
+        ProductDto.Response productResponse = new ProductDto.Response(1L, "상품1", "설명1", 1000, 900, 10, List.of("img1.jpg"), "카테고리1", null, 0, 0, 0.0, 0.1, false, Collections.emptyList(), Collections.emptyList());
         List<ProductDto.Response> responseList = List.of(productResponse);
         Page<ProductDto.Response> responsePage = new PageImpl<>(responseList);
 
-        when(productService.findProducts(eq(null), eq(null), any(Pageable.class))).thenReturn(responsePage);
+        when(productService.findProducts(eq(null), eq(null), any(Pageable.class), anyString())).thenReturn(responsePage);
 
         // when & then
         mockMvc.perform(get("/products?page=0&size=10"))
@@ -87,12 +88,12 @@ class ProductControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(roles = "ADMIN", username = "test@user.com")
     @DisplayName("상품 생성 API - 성공 (ADMIN 권한)")
     void createProduct_Success_WithAdminRole() throws Exception {
         // given
-        ProductDto.CreateRequest request = new ProductDto.CreateRequest("새 상품", "새 설명", 15000, List.of("new.jpg"), 1L, 10);
-        ProductDto.Response dummyResponse = new ProductDto.Response(1L, "새 상품", "새 설명", 15000, 10, List.of("new.jpg"), "카테고리1", null);
+        ProductDto.CreateRequest request = new ProductDto.CreateRequest("새 상품", "새 설명", 15000, List.of("new.jpg"), 1L, 10, 0.0);
+        ProductDto.Response dummyResponse = new ProductDto.Response(1L, "새 상품", "새 설명", 15000, 13500, 10, List.of("new.jpg"), "카테고리1", null, 0, 0, 0.0, 0.1, false, Collections.emptyList(), Collections.emptyList());
         when(productService.createProduct(any(ProductDto.CreateRequest.class), anyString())).thenReturn(dummyResponse);
 
         // when & then
@@ -107,7 +108,7 @@ class ProductControllerTest {
     @DisplayName("상품 생성 API - 실패 (인증되지 않은 사용자)")
     void createProduct_Fail_Unauthorized() throws Exception {
         // given
-        ProductDto.CreateRequest request = new ProductDto.CreateRequest("새 상품", "새 설명", 15000, List.of("new.jpg"), 1L, 10);
+        ProductDto.CreateRequest request = new ProductDto.CreateRequest("새 상품", "새 설명", 15000, List.of("new.jpg"), 1L, 10, 0.0);
 
         // when & then
         mockMvc.perform(post("/products")
@@ -118,7 +119,7 @@ class ProductControllerTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(roles = "ADMIN", username = "test@user.com")
     @DisplayName("상품 삭제 API - 성공 (ADMIN 권한)")
     void deleteProduct_Success_WithAdminRole() throws Exception {
         // given
@@ -127,24 +128,24 @@ class ProductControllerTest {
         doNothing().when(productService).deleteProduct(productId, userEmail);
 
         // when & then
-        mockMvc.perform(delete("/products/{id}", productId)
+        mockMvc.perform(delete("/products/{productId}", productId)
                         .with(csrf()))
                 .andExpect(status().isNoContent()); // 204 No Content 확인
     }
 
     @Test
-    @WithMockUser
+    @WithMockUser(username = "test@user.com")
     @DisplayName("상품 상세 조회 API - 성공")
     void getProductById_Success() throws Exception {
         // given
         Long productId = 1L;
         String detailContent = "<p>이것은 상세 설명입니다.</p>";
-        ProductDto.Response productResponse = new ProductDto.Response(productId, "상품1", "설명1", 1000, 10, List.of("img1.jpg"), "카테고리1", detailContent);
+        ProductDto.Response productResponse = new ProductDto.Response(productId, "상품1", "설명1", 1000, 900, 10, List.of("img1.jpg"), "카테고리1", detailContent, 0, 0, 0.0, 0.1, false, Collections.emptyList(), Collections.emptyList());
 
-        when(productService.findProductById(productId)).thenReturn(productResponse);
+        when(productService.findProductById(eq(productId), anyString())).thenReturn(productResponse);
 
         // when & then
-        mockMvc.perform(get("/products/{id}", productId))
+        mockMvc.perform(get("/products/{productId}", productId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(productId))
                 .andExpect(jsonPath("$.detailContent").value(detailContent));
@@ -161,7 +162,7 @@ class ProductControllerTest {
         when(productService.getShippingInfoByProductId(productId)).thenReturn(shippingResponse);
 
         // when & then
-        mockMvc.perform(get("/products/{id}/shipping", productId))
+        mockMvc.perform(get("/products/{productId}/shipping", productId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.shippingFee").value(3000))
                 .andExpect(jsonPath("$.shippingProvider").value("CJ대한통운"));
@@ -176,7 +177,7 @@ class ProductControllerTest {
         when(productService.getShippingInfoByProductId(productId)).thenThrow(new EntityNotFoundException("배송 정보를 찾을 수 없습니다."));
 
         // when & then
-        mockMvc.perform(get("/products/{id}/shipping", productId))
+        mockMvc.perform(get("/products/{productId}/shipping", productId))
                 .andExpect(status().isNotFound());
     }
 }

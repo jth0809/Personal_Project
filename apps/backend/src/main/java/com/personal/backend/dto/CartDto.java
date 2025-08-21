@@ -31,7 +31,7 @@ public class CartDto {
      * 장바구니에 담긴 개별 상품의 정보를 나타내는 DTO
      */
     public record CartItemResponse(
-            Long cartItemId, // 장바구니 아이템 자체의 ID (삭제/수정 시 사용)
+            Long id, // 장바구니 아이템 자체의 ID (삭제/수정 시 사용)
             Long productId,
             String productName,
             int price,

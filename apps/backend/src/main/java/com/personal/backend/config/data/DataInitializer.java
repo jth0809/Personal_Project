@@ -102,13 +102,13 @@ public class DataInitializer implements CommandLineRunner {
         String testOciUrl = "https://objectstorage.ap-chuncheon-1.oraclecloud.com/n/"+ociproperties.namespace()+"/b/"+ociproperties.bucketName()+"/o/";
         
         List<Product> products = List.of(
-            new Product("고성능 노트북", "최신 M4 칩이 탑재된 노트북입니다.", 2500000, List.of(testOciUrl+"1252cac8-e82d-458e-a5a1-b245a6364ae7_laptop.jpg"), computers,user,10),
-            new Product("기계식 키보드", "타건감이 뛰어난 기계식 키보드입니다.", 120000, List.of(testOciUrl+"30371fe9-4dae-49da-a61a-7c5eee276106_keyboard.jpg"), computers,user,10),
-            new Product("QHD 모니터", "27인치 고해상도 모니터입니다.", 350000, List.of(testOciUrl+"55b7f62b-f789-4843-b6b3-6e66ec809baf_monitor.jpg"), computers,user,10),
-            new Product("편안한 반팔 티셔츠", "100% 순면으로 만든 부드러운 티셔츠입니다.", 25000, List.of(testOciUrl+"330fc4ef-15cb-4cca-a25f-f5eaf2caab85_tshirt.jpg"), clothes,user,10),
-            new Product("데님 청바지", "어디에나 잘 어울리는 클래식한 청바지입니다.", 79000, List.of(testOciUrl+"b958d224-576c-4262-bcec-e491005cbacd_jeans.jpg"), clothes,user,10),
-            new Product("스프링 부트 완벽 가이드", "실무 예제로 배우는 스프링 부트의 모든 것.", 38000, List.of(testOciUrl+"66820148-d942-4199-89e9-57a3f18e334e_spring_book.jpg"), books,user,10),
-            new Product("JPA 프로그래밍 입문", "자바 ORM 표준 기술을 익혀보세요.", 35000, List.of(testOciUrl+"155a3427-1262-4957-b390-204e7d38a18f_jpa_book.jpg"), books,user,10)
+            Product.builder().name("고성능 노트북").description("최신 M4 칩이 탑재된 노트북입니다.").price(2500000).imageUrl(List.of(testOciUrl+"1252cac8-e82d-458e-a5a1-b245a6364ae7_laptop.jpg")).category(computers).user(user).stockQuantity(10).discountRate(0.1).build(),
+            Product.builder().name("기계식 키보드").description("타건감이 뛰어난 기계식 키보드입니다.").price(120000).imageUrl(List.of(testOciUrl+"30371fe9-4dae-49da-a61a-7c5eee276106_keyboard.jpg")).category(computers).user(user).stockQuantity(10).discountRate(0.0).build(),
+            Product.builder().name("QHD 모니터").description("27인치 고해상도 모니터입니다.").price(350000).imageUrl(List.of(testOciUrl+"55b7f62b-f789-4843-b6b3-6e66ec809baf_monitor.jpg")).category(computers).user(user).stockQuantity(10).discountRate(0.0).build(),
+            Product.builder().name("편안한 반팔 티셔츠").description("100% 순면으로 만든 부드러운 티셔츠입니다.").price(25000).imageUrl(List.of(testOciUrl+"330fc4ef-15cb-4cca-a25f-f5eaf2caab85_tshirt.jpg")).category(clothes).user(user).stockQuantity(10).discountRate(0.0).build(),
+            Product.builder().name("데님 청바지").description("어디에나 잘 어울리는 클래식한 청바지입니다.").price(79000).imageUrl(List.of(testOciUrl+"b958d224-576c-4262-bcec-e491005cbacd_jeans.jpg")).category(clothes).user(user).stockQuantity(10).discountRate(0.0).build(),
+            Product.builder().name("스프링 부트 완벽 가이드").description("실무 예제로 배우는 스프링 부트의 모든 것.").price(38000).imageUrl(List.of(testOciUrl+"66820148-d942-4199-89e9-57a3f18e334e_spring_book.jpg")).category(books).user(user).stockQuantity(10).discountRate(0.0).build(),
+            Product.builder().name("JPA 프로그래밍 입문").description("자바 ORM 표준 기술을 익혀보세요.").price(35000).imageUrl(List.of(testOciUrl+"155a3427-1262-4957-b390-204e7d38a18f_jpa_book.jpg")).category(books).user(user).stockQuantity(10).discountRate(0.0).build()
         );
 
         for (Product product : products) {
@@ -132,12 +132,10 @@ public class DataInitializer implements CommandLineRunner {
 
         Cart cart = cartRepository.findByUser(user).orElseGet(() -> cartRepository.save(Cart.builder().user(user).build()));
         if (cart.getCartItems().isEmpty()) {
-            // 👇 [수정] .stream().findFirst()를 추가하여 Optional로 변환합니다.
             productRepository.findByName("QHD 모니터").stream().findFirst().ifPresent(product -> {
                 cart.getCartItems().add(CartItem.builder().cart(cart).product(product).quantity(1).build());
                 log.info("Added 'QHD 모니터' to cart for user@test.com");
             });
-            // 👇 [수정] .stream().findFirst()를 추가하여 Optional로 변환합니다.
             productRepository.findByName("데님 청바지").stream().findFirst().ifPresent(product -> {
                 cart.getCartItems().add(CartItem.builder().cart(cart).product(product).quantity(2).build());
                 log.info("Added '데님 청바지' to cart for user@test.com");
@@ -146,7 +144,6 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         if (orderRepository.findByUser(user).isEmpty()) {
-            // 👇 [수정] .stream().findFirst()를 추가하여 Optional로 변환합니다.
             Optional<Product> laptopOpt = productRepository.findByName("고성능 노트북").stream().findFirst();
             Optional<Product> bookOpt = productRepository.findByName("스프링 부트 완벽 가이드").stream().findFirst();
 
@@ -161,7 +158,8 @@ public class DataInitializer implements CommandLineRunner {
                 OrderItem laptopItem = OrderItem.builder().order(order).product(laptopOpt.get()).count(1).orderPrice(2450000).build();
                 OrderItem bookItem = OrderItem.builder().order(order).product(bookOpt.get()).count(1).orderPrice(38000).build();
 
-                order.getOrderItems().addAll(List.of(laptopItem, bookItem));
+                order.addOrderItem(laptopItem);
+                order.addOrderItem(bookItem);
                 orderRepository.save(order);
                 log.info("Created a sample order for user@test.com");
             }

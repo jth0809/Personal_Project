@@ -1,0 +1,308 @@
+# ------------------- Query (조회) -------------------
+type Query {
+    """상품 목록을 페이징하여 조회합니다."""
+    products(keyword: String, categoryId: ID, page: Int, size: Int, sortBy: String, sortOrder: String): ProductPage
+
+    """ID를 이용해 단일 상품의 상세 정보를 조회합니다."""
+    product(id: ID!): Product
+
+    """현재 로그인한 사용자가 '좋아요'한 상품 목록을 조회합니다."""
+    myLikes(page: Int, size: Int, sortBy: String, sortOrder: String): ProductPage
+
+    """시스템에 등록된 모든 태그 목록을 조회합니다."""
+    tags: [Tag]
+
+    """시스템에 등록된 모든 카테고리 목록을 조회합니다."""
+    categories: [Category]
+
+    """상품에 대한 리뷰 목록을 조회합니다."""
+    reviews(productId: ID!, page: Int, size: Int): ReviewPage
+
+    """상품에 대한 Q&A 목록을 조회합니다."""
+    qnas(productId: ID!, page: Int, size: Int): QnaPage
+
+    """현재 로그인한 사용자의 장바구니 정보를 조회합니다."""
+    myCart: Cart
+
+    """현재 로그인한 사용자의 주문 내역을 조회합니다."""
+    myOrders(page: Int, size: Int): OrderPage
+
+    """ID를 이용해 단일 주문의 상세 정보를 조회합니다."""
+    order(id: ID!): Order
+
+    """현재 로그인한 사용자 정보를 조회합니다."""
+    me: User
+}
+
+# ------------------- Mutation (생성, 수정, 삭제) -------------------
+type Mutation {
+    # --- Auth ---
+    signup(input: SignupInput!): Boolean
+    login(input: LoginInput!): TokenResponse
+
+    # --- Product ---
+    createProduct(input: ProductInput!): Product
+    updateProduct(id: ID!, input: ProductInput!): Product
+    deleteProduct(id: ID!): Boolean
+
+    # --- Like ---
+    addLike(productId: ID!): Product
+    removeLike(productId: ID!): Product
+
+    # --- Tag & Category ---
+    createTag(name: String!): Tag
+    createCategory(name: String!): Category
+
+    # --- ProductOption ---
+    createProductOption(productId: ID!, input: ProductOptionInput!): ProductOption
+    deleteProductOption(optionId: ID!): Boolean
+
+    # --- Cart ---
+    addItemToCart(productId: ID!, quantity: Int!): Cart
+    removeCartItem(cartItemId: ID!): Cart
+
+    # --- Order ---
+    createOrder(input: OrderInput!): Order
+    cancelOrder(orderId: ID!, reason: String!): Order
+
+    # --- Review ---
+    createReview(input: ReviewInput!): Review
+    updateReview(reviewId: ID!, input: ReviewInput!): Review
+    deleteReview(reviewId: ID!): Boolean
+
+    # --- Q&A ---
+    createQna(input: QnaInput!): Qna
+    answerQna(qnaId: ID!, answer: String!): Qna
+    deleteQna(qnaId: ID!): Boolean
+
+    # --- Image ---
+    generateUploadUrl(fileName: String!): ImageUploadInfo
+    generateUploadUrls(fileNames: [String]!): [ImageUploadInfo]
+    deleteImage(productId: ID!, objectName: String!): Boolean
+
+    # --- Payment ---
+    confirmTossPayment(input: PaymentVerificationInput!): PaymentConfirmationResponse
+}
+
+# ------------------- Enum Types (열거 타입) -------------------
+enum OrderStatus {
+    PENDING
+    PAID
+    COMPLETED
+    CANCELED
+}
+
+enum UserRole {
+    USER
+    ADMIN
+}
+
+# ------------------- Page Types (페이지네이션 타입) -------------------
+type ProductPage {
+    content: [Product]
+    totalPages: Int
+    totalElements: Int
+    size: Int
+    number: Int
+}
+
+type ReviewPage {
+    content: [Review]
+    totalPages: Int
+    totalElements: Int
+    size: Int
+    number: Int
+}
+
+type QnaPage {
+    content: [Qna]
+    totalPages: Int
+    totalElements: Int
+    size: Int
+    number: Int
+}
+
+type OrderPage {
+    content: [Order]
+    totalPages: Int
+    totalElements: Int
+    size: Int
+    number: Int
+}
+
+# ------------------- Object Types (객체 타입) -------------------
+type User {
+    id: ID!
+    email: String!
+    username: String!
+    role: UserRole!
+}
+
+type TokenResponse {
+    accessToken: String!
+}
+
+type Category {
+    id: ID!
+    name: String!
+}
+
+type Tag {
+    id: ID!
+    name: String!
+}
+
+type Product {
+    id: ID!
+    name: String!
+    description: String
+    originalPrice: Int!
+    discountedPrice: Int!
+    stockQuantity: Int!
+    imageUrl: [String]
+    category: Category
+    detailContent: String
+    likeCount: Int
+    reviewCount: Int
+    averageRating: Float
+    discountRate: Float
+    isLiked: Boolean
+    options: [ProductOption]
+    tags: [Tag]
+    shippingInfo: ShippingInfo
+    user: User
+}
+
+type ProductOption {
+    id: ID!
+    optionGroupName: String!
+    optionName: String!
+    additionalPrice: Int!
+    stockQuantity: Int!
+}
+
+type ShippingInfo {
+    shippingMethod: String
+    shippingFee: Int
+    freeShippingThreshold: Int
+    estimatedDeliveryDays: String
+    shippingProvider: String
+}
+
+type Cart {
+    id: ID!
+    items: [CartItem]
+    totalPrice: Int
+}
+
+type CartItem {
+    id: ID!
+    product: Product!
+    quantity: Int!
+}
+
+type Order {
+    id: ID!
+    pgOrderId: String
+    orderDate: String
+    status: OrderStatus
+    items: [OrderItem]
+    user: User
+    totalAmount: Int!
+    cancelReason: String
+    refundedAmount: Int
+}
+
+type OrderItem {
+    id: ID!
+    product: Product!
+    count: Int!
+    orderPrice: Int!
+}
+
+type Review {
+    id: ID!
+    rating: Int!
+    comment: String!
+    author: User
+    product: Product
+}
+
+type Qna {
+    id: ID!
+    question: String!
+    answer: String
+    author: User
+    product: Product
+    createdAt: String
+    answeredAt: String
+}
+
+type ImageUploadInfo {
+    fileName: String!
+    uploadUrl: String!
+    imageUrl: String!
+}
+
+type PaymentConfirmationResponse {
+    status: String
+    orderId: String
+    totalAmount: Int
+}
+
+# ------------------- Input Types (입력 타입) -------------------
+input SignupInput {
+    email: String!
+    password: String!
+    username: String!
+}
+
+input LoginInput {
+    email: String!
+    password: String!
+}
+
+input ProductInput {
+    name: String!
+    description: String
+    price: Int!
+    imageUrl: [String]!
+    categoryId: ID!
+    stockQuantity: Int
+    discountRate: Float
+    detailContent: String
+}
+
+input ProductOptionInput {
+    optionGroupName: String!
+    optionName: String!
+    additionalPrice: Int!
+    stockQuantity: Int!
+}
+
+input OrderInput {
+    items: [OrderItemInput]!
+}
+
+input OrderItemInput {
+    productId: ID!
+    count: Int!
+}
+
+input ReviewInput {
+    productId: ID
+    rating: Int!
+    comment: String!
+}
+
+input QnaInput {
+    productId: ID!
+    question: String!
+}
+
+input PaymentVerificationInput {
+    provider: String!
+    paymentKey: String!
+    orderId: String!
+    amount: Int!
+}

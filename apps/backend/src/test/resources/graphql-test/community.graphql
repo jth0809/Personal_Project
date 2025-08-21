@@ -1,0 +1,60 @@
+query Reviews($productId: ID!) {
+    reviews(productId: $productId) {
+        content {
+            id
+            author {
+                email
+            }
+        }
+    }
+}
+
+query Qnas($productId: ID!) {
+    qnas(productId: $productId) {
+        content {
+            id
+            question
+            author {
+                email
+            }
+        }
+    }
+}
+
+mutation CreateReview($input: ReviewInput!) {
+    createReview(input: $input) {
+        id
+        rating
+        comment
+    }
+}
+
+mutation UpdateReview($reviewId: ID!, $input: ReviewInput!) {
+    updateReview(reviewId: $reviewId, input: $input) {
+        id
+        rating
+        comment
+    }
+}
+
+mutation DeleteReview($reviewId: ID!) {
+    deleteReview(reviewId: $reviewId)
+}
+
+mutation CreateQna($input: QnaInput!) {
+    createQna(input: $input) {
+        id
+        question
+    }
+}
+
+mutation AnswerQna($qnaId: ID!, $answer: String!) {
+    answerQna(qnaId: $qnaId, answer: $answer) {
+        id
+        answer
+        author { email }
+    }
+}
+mutation DeleteQna($qnaId: ID!) {
+    deleteQna(qnaId: $qnaId)
+}

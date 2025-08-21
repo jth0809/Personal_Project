@@ -20,7 +20,7 @@ import com.personal.backend.service.CustomOAuth2UserService;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration // 이 클래스가 설정 파일임을 스프링에게 알려줍니다.
-@EnableWebSecurity // 스프링 시큐리티의 웹 보안 기능을 활성화합니다.
+@EnableWebSecurity
 @RequiredArgsConstructor
 @EnableMethodSecurity
 public class SecurityConfig {
@@ -58,6 +58,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/products/**", "/categories/**","/qna/**","/reviews/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/graphql/**", "/graphiql/**").permitAll()
                         
                         // 위에서 지정한 경로 외의 모든 요청은 인증을 요구
                         .anyRequest().authenticated()

@@ -1,15 +1,19 @@
 package com.personal.backend.dto;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.personal.backend.domain.Product;
-import com.personal.backend.domain.ProductDetail;
+import com.personal.backend.domain.ProductOption;
+import com.personal.backend.domain.Tag;
 import com.personal.backend.domain.User;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 import io.swagger.v3.oas.annotations.media.Schema;
+
 public class ProductDto {
 
     /**
@@ -22,12 +26,14 @@ public class ProductDto {
         String description,
         @Min(value = 1, message = "가격은 0보다 커야 합니다.")    
         int price,
-        @NotNull(message = "이미지 URL 목록은 필수입니다.")
+        @NotEmpty(message = "이미지 URL 목록은 비어 있을 수 없습니다.")
         List<String> imageUrl,
         @NotNull(message = "카테고리 ID는 필수입니다.")
         Long categoryId, // 상품이 속할 카테고리의 ID
         @Min(value = 0, message = "재고는 0 이상이어야 합니다.")
-        int stockQuantity
+        int stockQuantity,
+        @Min(value = 0, message = "할인율은 0 이상이어야 합니다.")
+        double discountRate
     ) {
         // 이 DTO를 실제 데이터베이스에 저장될 Product 엔티티로 변환하는 메소드
         // Category는 Service 계층에서 ID를 이용해 조회 후 주입합니다.
@@ -39,6 +45,7 @@ public class ProductDto {
                     .imageUrl(imageUrl)
                     .user(user)
                     .stockQuantity(stockQuantity)
+                    .discountRate(discountRate)
                     .build();
         }
     }
@@ -53,13 +60,15 @@ public class ProductDto {
         String description,
         @Min(value = 1, message = "가격은 0보다 커야 합니다.")    
         int price,
-        @NotNull(message = "이미지 URL 목록은 필수입니다.")
+        @NotEmpty(message = "이미지 URL 목록은 비어 있을 수 없습니다.")
         List<String> imageUrl,
         @NotNull(message = "카테고리 ID는 필수입니다.")
         Long categoryId,
         @Min(value = 0, message = "재고는 0 이상이어야 합니다.")
-        int stockQuantity 
-
+        int stockQuantity,
+        String detailContent,
+        @Min(value = 0, message = "할인율은 0 이상이어야 합니다.")
+        double discountRate
     ) {}
 
     /**
@@ -67,41 +76,54 @@ public class ProductDto {
      */
     @Schema(name = "ProductResponse", description = "상품 조회 응답 DTO")
     public record Response(
-            Long id,
-            String name,
-            String description,
-            int price,
-            int stockQuantity,
-            List<String> imageUrl,
-            String categoryName,
-            String detailContent // 상품 상세 설명 필드 추가
+        Long id,
+        String name,
+        String description,
+        int originalPrice,
+        int discountedPrice,
+        int stockQuantity,
+        List<String> imageUrl,
+        String categoryName,
+        String detailContent,
+        int likeCount,
+        int reviewCount,
+        double averageRating,
+        double discountRate,
+        boolean isLiked,
+        List<ProductOptionDto.Response> options,
+        List<TagDto.Response> tags
     ) {
-        // Product 엔티티 객체를 클라이언트에게 보여줄 Response DTO로 변환하는 정적 메소드
-        public static Response fromEntity(Product product) {
+        // 정적 팩토리 메소드는 그대로 유지하여 변환 로직을 캡슐화합니다.
+        public static Response from(Product product, boolean isLiked, String detailContent, List<ProductOption> options, List<Tag> tags) {
+            List<ProductOptionDto.Response> optionResponses = options.stream()
+                    .map(ProductOptionDto.Response::fromEntity)
+                    .toList();
+            List<TagDto.Response> tagResponses = tags.stream()
+                    .map(TagDto.Response::fromEntity)
+                    .toList();
+
             return new Response(
                     product.getId(),
                     product.getName(),
                     product.getDescription(),
-                    product.getPrice(),
+                    product.getOriginalPrice(),
+                    product.getDiscountedPrice(),
                     product.getStockQuantity(),
                     product.getImageUrl(),
                     product.getCategory() != null ? product.getCategory().getName() : null,
-                    null // 상세 설명이 없는 경우 null
+                    detailContent,
+                    product.getLikeCount(),
+                    product.getReviewCount(),
+                    product.getAverageRating(),
+                    product.getDiscountRate(),
+                    isLiked,
+                    optionResponses,
+                    tagResponses
             );
         }
 
-        // Product와 ProductDetail 엔티티를 함께 받아 변환하는 정적 메소드
-        public static Response fromEntity(Product product, ProductDetail productDetail) {
-            return new Response(
-                    product.getId(),
-                    product.getName(),
-                    product.getDescription(),
-                    product.getPrice(),
-                    product.getStockQuantity(),
-                    product.getImageUrl(),
-                    product.getCategory() != null ? product.getCategory().getName() : null,
-                    productDetail != null ? productDetail.getContent() : null
-            );
+        public static Response fromEntity(Product product) {
+            return from(product, false, null, product.getOptions(), product.getProductTags().stream().map(pt -> pt.getTag()).toList());
         }
     }
 }

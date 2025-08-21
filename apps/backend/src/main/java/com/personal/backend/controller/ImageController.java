@@ -55,7 +55,7 @@ public class ImageController {
 
     @Operation(summary = "이미지 삭제", description = "OCI Object Storage에서 이미지를 삭제하고 DB에서 이미지를 삭제합니다.")
     @SecurityRequirement(name = "bearerAuth")
-    @DeleteMapping("\"/{objectName}/products/{productId}\"")
+    @DeleteMapping("/{objectName}/products/{productId}")
     public ResponseEntity<Void> deleteImage(
         @Min(value = 0, message = "유효하지 않은 상품 ID입니다.") @PathVariable Long productId,
         @PathVariable String objectName,

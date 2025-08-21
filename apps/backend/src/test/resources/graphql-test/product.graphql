@@ -1,0 +1,94 @@
+query Products($keyword: String) {
+    products(keyword: $keyword) {
+        content {
+            id
+            name
+            category { name }
+            user { id }
+        }
+    }
+}
+
+query Product($id: ID!) {
+    product(id: $id) {
+        id
+        name
+        user { id }
+        category { name }
+    }
+}
+
+query MyLikes {
+    myLikes {
+        content {
+            id
+            name
+        }
+    }
+}
+
+query Tags {
+    tags {
+        name
+    }
+}
+
+query Categories {
+    categories {
+        id
+        name
+    }
+}
+
+mutation CreateProduct($input: ProductInput!) {
+    createProduct(input: $input) {
+        name
+    }
+}
+
+mutation UpdateProduct($id: ID!, $input: ProductInput!) {
+    updateProduct(id: $id, input: $input) {
+        name
+    }
+}
+
+mutation DeleteProduct($id: ID!) {
+    deleteProduct(id: $id)
+}
+
+mutation AddLike($productId: ID!) {
+    addLike(productId: $productId) {
+        id
+        name
+    }
+}
+
+mutation RemoveLike($productId: ID!) {
+    removeLike(productId: $productId) {
+        id
+        name
+    }
+}
+
+mutation CreateTag($name: String!) {
+    createTag(name: $name) {
+        name
+    }
+}
+
+mutation CreateCategory($name: String!) {
+    createCategory(name: $name) {
+        name
+    }
+}
+
+mutation CreateProductOption($productId: ID!, $input: ProductOptionInput!) {
+    createProductOption(productId: $productId, input: $input) {
+        id
+        optionName
+    }
+}
+
+mutation DeleteProductOption($optionId: ID!) {
+    deleteProductOption(optionId: $optionId)
+}

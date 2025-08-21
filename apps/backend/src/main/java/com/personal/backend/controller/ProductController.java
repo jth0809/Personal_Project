@@ -91,10 +91,12 @@ public class ProductController {
     public ResponseEntity<Page<ProductDto.Response>> getAllProducts(
         @RequestParam(required = false) String keyword,
         @Min(value = 0, message = "유효하지 않은 카테고리 ID입니다.") @RequestParam(required = false) Long categoryId,
-        @ParameterObject PageableDto.PageableRequest pageableRequest
+        @ParameterObject PageableDto.PageableRequest pageableRequest,
+        @AuthenticationPrincipal UserDetails userDetails
         ){
+        String userEmail = userDetails.getUsername();
         Pageable pageable = pageableRequest.toPageable();
-        Page<ProductDto.Response> productsPage = productService.findProducts(keyword, categoryId, pageable);
+        Page<ProductDto.Response> productsPage = productService.findProducts(keyword, categoryId, pageable, userEmail);
         return ResponseEntity.ok(productsPage); // 조회된 상품 목록과 함께 200 OK 응답을 반환합니다.
     }
 
@@ -104,9 +106,9 @@ public class ProductController {
      */
     @Operation(summary = "상품 상세 조회", description = "상품 상세 조회 API")
     @GetMapping("/{productId}")
-    public ResponseEntity<ProductDto.Response> getProductById(@Min(value = 0, message = "유효하지 않은 상품 ID입니다.") @PathVariable Long productId) {
-        // URL 경로의 {id} 값을 Long 타입의 id 변수로 받습니다.
-        ProductDto.Response product = productService.findProductById(productId);
+    public ResponseEntity<ProductDto.Response> getProductById(@Min(value = 0, message = "유효하지 않은 상품 ID입니다.") @PathVariable Long productId, @AuthenticationPrincipal UserDetails userDetails) {
+        String userEmail = userDetails.getUsername();
+        ProductDto.Response product = productService.findProductById(productId, userEmail);
         return ResponseEntity.ok(product); // 조회된 상품 정보와 함께 200 OK 응답을 반환합니다.
     }
 

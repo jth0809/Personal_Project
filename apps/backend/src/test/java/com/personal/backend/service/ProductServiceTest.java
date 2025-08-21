@@ -2,6 +2,7 @@ package com.personal.backend.service;
 
 import com.personal.backend.domain.Category;
 import com.personal.backend.domain.Product;
+import com.personal.backend.domain.ProductDetail;
 import com.personal.backend.domain.ShippingInfo;
 import com.personal.backend.domain.User;
 import com.personal.backend.domain.UserRole;
@@ -9,6 +10,8 @@ import com.personal.backend.dto.CategoryDto;
 import com.personal.backend.dto.ProductDto;
 import com.personal.backend.dto.ShippingInfoDto;
 import com.personal.backend.repository.CategoryRepository;
+import com.personal.backend.repository.ProductDetailRepository;
+import com.personal.backend.repository.ProductLikeRepository;
 import com.personal.backend.repository.ProductRepository;
 import com.personal.backend.repository.ShippingInfoRepository;
 import com.personal.backend.repository.UserRepository;
@@ -54,10 +57,17 @@ class ProductServiceTest {
     @Mock
     private ShippingInfoRepository shippingInfoRepository;
 
+    @Mock
+    private ProductLikeRepository productLikeRepository;
+
+    @Mock
+    private ProductDetailRepository productDetailRepository;
+
     private Category dummyCategory;
     private Product dummyProduct;
     private User dummyUser;
     private ShippingInfo dummyShippingInfo;
+    private ProductDetail dummyProductDetail;
 
     @BeforeEach
     void setUp() {
@@ -85,8 +95,9 @@ class ProductServiceTest {
                 .category(dummyCategory)
                 .user(dummyUser)
                 .stockQuantity(10)
+                .discountRate(0.0) // Added discountRate
                 .build();
-        
+        dummyProductDetail = ProductDetail.builder().product(dummyProduct).content("상세 정보입니다.").build();
         dummyShippingInfo = ShippingInfo.builder()
                 .shippingMethod("택배")
                 .shippingFee(3000)
@@ -99,7 +110,7 @@ class ProductServiceTest {
     void createProduct_Success() {
         // given
         String userEmail = "test@user.com";
-        ProductDto.CreateRequest request = new ProductDto.CreateRequest("새 상품",  "새 설명", 15000,List.of("new.jpg"), 1L,10);
+        ProductDto.CreateRequest request = new ProductDto.CreateRequest("새 상품",  "새 설명", 15000,List.of("new.jpg"), 1L,10, 0.0);
         
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(dummyUser));
         // Mock 설정: categoryRepository.findById가 호출되면 dummyCategory를 반환
@@ -122,7 +133,7 @@ class ProductServiceTest {
     void createProduct_Fail_CategoryNotFound() {
         // given
         String userEmail = "test@user.com";
-        ProductDto.CreateRequest request = new ProductDto.CreateRequest("새 상품",  "새 설명", 15000,List.of("new.jpg"), 99L,10);
+        ProductDto.CreateRequest request = new ProductDto.CreateRequest("새 상품",  "새 설명", 15000,List.of("new.jpg"), 99L,10, 0.0);
         when(categoryRepository.findById(99L)).thenReturn(Optional.empty()); // 존재하지 않는 카테고리 ID로 조회 시 빈 Optional 반환
 
         // when & then
@@ -136,9 +147,10 @@ class ProductServiceTest {
         // given
         Long productId = 1L;
         String userEmail = "test@user.com";
-        ProductDto.UpdateRequest request = new ProductDto.UpdateRequest("수정된 이름", "수정된 설명", 20000, List.of("updated.jpg"), 1L,10);
+        ProductDto.UpdateRequest request = new ProductDto.UpdateRequest("수정된 이름", "수정된 설명", 20000, List.of("updated.jpg"), 1L,10, null, 0.0);
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(dummyUser));
         when(productRepository.findById(productId)).thenReturn(Optional.of(dummyProduct));
+        when(productDetailRepository.findById(any())).thenReturn(Optional.of(dummyProductDetail));
         when(categoryRepository.findById(request.categoryId())).thenReturn(Optional.of(dummyCategory));
 
         // when
@@ -146,7 +158,7 @@ class ProductServiceTest {
 
         // then
         assertThat(response.name()).isEqualTo("수정된 이름");
-        assertThat(response.price()).isEqualTo(20000);
+        assertThat(response.originalPrice()).isEqualTo(20000);
         verify(productRepository, times(1)).findById(productId);
     }
 
@@ -183,7 +195,7 @@ class ProductServiceTest {
 
         // when
         // 4. 서비스 메소드 호출 시 Pageable 객체를 전달합니다.
-        Page<ProductDto.Response> resultPage = productService.findProducts(null,null, pageable);
+        Page<ProductDto.Response> resultPage = productService.findProducts(null,null, pageable, "test@user.com");
 
         // then
         // 5. 반환된 Page 객체의 내용을 검증합니다.
@@ -206,7 +218,7 @@ class ProductServiceTest {
         when(productRepository.findByCategoryId(categoryId, pageable)).thenReturn(productPage);
         
         // when
-        Page<ProductDto.Response> resultPage = productService.findProducts(null, categoryId, pageable);
+        Page<ProductDto.Response> resultPage = productService.findProducts(null, categoryId, pageable, "test@user.com");
 
         // then
         assertThat(resultPage.getContent()).hasSize(1);
@@ -229,7 +241,7 @@ class ProductServiceTest {
 
         // when
         // 서비스 호출 시 keyword를 전달하고 categoryId는 null로 전달
-        Page<ProductDto.Response> resultPage = productService.findProducts(keyword, null, pageable);
+        Page<ProductDto.Response> resultPage = productService.findProducts(keyword, null, pageable, "test@user.com");
 
         // then
         assertThat(resultPage.getContent()).hasSize(1);
