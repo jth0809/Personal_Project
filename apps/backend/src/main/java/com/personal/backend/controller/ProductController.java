@@ -94,7 +94,7 @@ public class ProductController {
         @ParameterObject PageableDto.PageableRequest pageableRequest,
         @AuthenticationPrincipal UserDetails userDetails
         ){
-        String userEmail = userDetails.getUsername();
+        String userEmail = (userDetails != null) ? userDetails.getUsername() : null;
         Pageable pageable = pageableRequest.toPageable();
         Page<ProductDto.Response> productsPage = productService.findProducts(keyword, categoryId, pageable, userEmail);
         return ResponseEntity.ok(productsPage); // 조회된 상품 목록과 함께 200 OK 응답을 반환합니다.
@@ -107,7 +107,7 @@ public class ProductController {
     @Operation(summary = "상품 상세 조회", description = "상품 상세 조회 API")
     @GetMapping("/{productId}")
     public ResponseEntity<ProductDto.Response> getProductById(@Min(value = 0, message = "유효하지 않은 상품 ID입니다.") @PathVariable Long productId, @AuthenticationPrincipal UserDetails userDetails) {
-        String userEmail = userDetails.getUsername();
+        String userEmail = (userDetails != null) ? userDetails.getUsername() : null;
         ProductDto.Response product = productService.findProductById(productId, userEmail);
         return ResponseEntity.ok(product); // 조회된 상품 정보와 함께 200 OK 응답을 반환합니다.
     }

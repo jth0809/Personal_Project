@@ -19,7 +19,7 @@ import com.personal.backend.service.CustomOAuth2UserService;
 
 import jakarta.servlet.http.HttpServletResponse;
 
-@Configuration // 이 클래스가 설정 파일임을 스프링에게 알려줍니다.
+@Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 @EnableMethodSecurity
