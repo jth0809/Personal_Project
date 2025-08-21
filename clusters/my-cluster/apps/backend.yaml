@@ -20,7 +20,7 @@ spec:
       automountServiceAccountToken: false
       containers:
         - name: backend
-          image: ghcr.io/jth0809/personal_project/backend:1a835f2
+          image: ghcr.io/jth0809/personal_project/backend:a709fc8
           volumeMounts:
             - name: oci-secret-volume
               mountPath: "/etc/oci"
