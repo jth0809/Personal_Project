@@ -13,9 +13,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "products") // 테이블 이름은 보통 복수형을 사용합니다.
+@Table(name = "products")
 @Getter
-// 👇 2. 무분별한 Setter를 막고, 필요한 생성자만 노출하여 객체의 일관성을 유지합니다.
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Product {
 
@@ -62,10 +61,10 @@ public class Product {
     @Column(columnDefinition = "bigint default 0")
     private long totalRatingScore = 0L;
     
-    @Column(columnDefinition = "double default 0.0")
+    @Column(columnDefinition = "NUMBER(10, 2) default 0.0")
     private double averageRating = 0.0;
     
-    @Column(columnDefinition = "double default 0.0")
+    @Column(columnDefinition = "NUMBER(3, 2) default 0.0")
     private double discountRate = 0.0;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
