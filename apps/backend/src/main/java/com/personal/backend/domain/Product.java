@@ -58,7 +58,7 @@ public class Product {
     @Column(columnDefinition = "integer default 0")
     private int reviewCount = 0;
 
-    @Column(columnDefinition = "bigint default 0")
+    @Column(columnDefinition = "NUMBER(19) default 0")
     private long totalRatingScore = 0L;
     
     @Column(columnDefinition = "NUMBER(10, 2) default 0.0")
