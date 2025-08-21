@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @SpringBootApplication
 @ConfigurationPropertiesScan
 public class BackendApplication {
+	//test
 	public static void main(String[] args) {
 		SpringApplication.run(BackendApplication.class, args);
 	}
