@@ -13,6 +13,9 @@ metadata:
     nginx.ingress.kubernetes.io/limit-rps: "10" # 초당 10개 요청으로 제한
     nginx.ingress.kubernetes.io/limit-rpm: "600" # 분당 600개 요청으로 제한
     nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
 spec:
   tls:
       - hosts:
@@ -41,6 +44,13 @@ spec:
               port:
                 number: 80
         - path: /()(v3/api-docs.*) #스웨거 페이지의 호출 경로
+          pathType: Prefix
+          backend:
+            service:
+              name: backend-svc
+              port:
+                number: 80
+        - path: /()(graphql.*)
           pathType: Prefix
           backend:
             service:
