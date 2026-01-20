@@ -1,6 +1,6 @@
-# Kubernetes 기반 E-Commerce 서비스
+# k0s 기반 K8s 클러스터 및 GitOps 파이프라인 구축
 
-**Kubernetes를 기반으로 지금까지 배운 내용을 정리하며 향후 MSA 및 MLOps 적용을 목표로 확장해나가는 프로젝트입니다.**  
+**경량화된 Kubernetes(k0s)를 활용하여 온프레미스 환경을 시뮬레이션하고, IaC 및 GitOps를 도입하여 배포 운영 자동화를 구현한 인프라 엔지니어링 프로젝트입니다.**  
 
 **소개 GIF**
 <br/>
@@ -32,12 +32,12 @@
 
 ## 1. 프로젝트 개요 (Overview)
 
--   **개발 기간**: 2025.06.27 ~ 진행 중
+-   **개발 기간**: 2025.06.27 ~ 2025.08.21
 -   **개발 인원**: 2명 (FE 1명, BE 1명)
 -   **주요 목표**:
-    - Kubernetes(k0s) 환경에서의 애플리케이션 배포 및 운영 경험
-    - MSA 전환을 고려한 확장 가능한 모놀리식 아키텍처 설계 능력 향상
-    - MLOps 파이프라인 구축 및 추천 시스템 적용을 통한 AI 역량 강화
+    - On-Premise 시뮬레이션: 베어메탈 성격의 k0s 클러스터 구축
+    - Ops 자동화: Terraform, Ansible, GitOps(FluxCD)를 활용한 운영의 코드화 구현
+    - AI 인프라 확장성 확보: 향후 MLOps 파이프라인 수용을 고려한 확장 가능한 아키텍처 설계
 
 <br/>
 
@@ -45,17 +45,30 @@
 > **범례**: 🟢 구현 완료, 🟡 개발 진행 중, 🔴 구상 및 설계 단계
 
 #### 인프라 구축 및 CI/CD
-- 🟢 k0s를 활용하여 단일 노드 Kubernetes 클러스터 구축
-- 🟢 GitHub Actions와 Flux CD를 이용한 GitOps 기반 배포 자동화 파이프라인 구현
-- 🟡 Terraform 및 Ansible
 
-#### 회원 관리 시스템
-- 🟢 Spring Security와 JWT를 이용한 인증/인가 기능의 핵심 로직 구현
-- 🟡 회원가입, 로그인, 정보 수정 등 주요 API 개발 진행 중
+Focus: 애플리케이션 기능 구현보다는 안정적인 서비스 운영을 위한 기반 환경(Platform) 구축에 집중했습니다.
 
-#### 상품 및 주문 시스템
-- 🟡 상품 등록, 조회, 재고 관리 등 핵심 비즈니스 로직 구현 중
-- 🔴 주문 및 결제 프로세스
+1. 🟢 경량화 클러스터 구축 (Cluster Provisioning)
+
+    - k0s 도입: System Resource가 제한적인 환경을 고려하여 경량 K8s 배포판인 k0s 선정 및 구축
+
+    - 가용성 확보: 단일 노드 내 ReplicaSet 구성을 통한 Pod 레벨의 고가용성(HA) 전략 수립
+
+2. 🟢 GitOps 기반 배포 자동화 (Continuous Deployment)
+
+    - FluxCD 도입: 클러스터 상태를 Git 리포지토리와 실시간 동기화(Reconciliation)하는 Pull 방식 배포 구현
+
+    - Version Control: GitHub Actions와 연동하여 이미지 태그 변경 시 즉각적인 배포 파이프라인 트리거
+
+3. 🟢 보안 및 네트워크 최적화 (Network & Security):
+
+    - HostNetwork 모드 적용: L4 로드밸런서가 없는 환경을 극복하기 위해 Ingress Controller 네트워크 모드 최적화
+
+    - TLS 자동화: Cert-Manager를 활용한 인증서 발급 및 HTTPS 암호화 통신 구현
+
+4. 🟡 IaC 도입 및 고도화 (Infrastructure as Code)
+
+    - Terraform/Ansible: 클라우드 리소스 프로비저닝 및 노드 초기 설정 자동화 스크립트 작성
 
 <br/>
 
