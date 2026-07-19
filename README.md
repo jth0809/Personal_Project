@@ -62,7 +62,7 @@ Focus: 애플리케이션 기능 구현보다는 안정적인 서비스 운영�
 
 3. 🟢 보안 및 네트워크 최적화 (Network & Security):
 
-    - HostNetwork 모드 적용: L4 로드밸런서가 없는 환경을 극복하기 위해 Ingress Controller 네트워크 모드 최적화
+    - HostPort 모드 적용: L4 로드밸런서가 없는 환경을 극복하기 위해 Ingress Controller 네트워크 모드 최적화
 
     - TLS 자동화: Cert-Manager를 활용한 인증서 발급 및 HTTPS 암호화 통신 구현
 <br/>
