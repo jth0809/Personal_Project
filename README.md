@@ -36,7 +36,7 @@
 -   **개발 인원**: 2명 (FE 1명, BE 1명)
 -   **주요 목표**:
     - On-Premise 시뮬레이션: 베어메탈 성격의 k0s 클러스터 구축
-    - Ops 자동화: Terraform, Ansible, GitOps(FluxCD)를 활용한 운영의 코드화 구현
+    - Ops 자동화: GitOps(FluxCD)를 활용한 운영의 코드화 구현
     - AI 인프라 확장성 확보: 향후 MLOps 파이프라인 수용을 고려한 확장 가능한 아키텍처 설계
 
 <br/>
@@ -65,11 +65,6 @@ Focus: 애플리케이션 기능 구현보다는 안정적인 서비스 운영�
     - HostNetwork 모드 적용: L4 로드밸런서가 없는 환경을 극복하기 위해 Ingress Controller 네트워크 모드 최적화
 
     - TLS 자동화: Cert-Manager를 활용한 인증서 발급 및 HTTPS 암호화 통신 구현
-
-4. 🟡 IaC 도입 및 고도화 (Infrastructure as Code)
-
-    - Terraform/Ansible: 클라우드 리소스 프로비저닝 및 노드 초기 설정 자동화 스크립트 작성
-
 <br/>
 
 ## 3. 기술 스택 (Tech Stack)
