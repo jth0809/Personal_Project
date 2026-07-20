@@ -104,7 +104,7 @@ CI/CD 도구로는 GitHub Actions를 사용했습니다. 소스 코드 저장소
 
 #### Kubernetes(k0s) 클러스터 외부 접속 불가 문제
 - k0s 클러스터 구축 후, Ingress를 통한 외부 접속이 불가한 문제를 해결했습니다.
-- 원인은 클라우드 보안 정책(VCN/NSG)의 포트설정과 Ingress Controller의 모드설정 이었습니다. IngressController를 호스트 네트워크 모드로 설정하고 포트를 80,443으로 설정하여 로드밸런서 도입 전 임시적으로 문제를 해결했습니다.
+- 원인은 클라우드 보안 정책(VCN/NSG)의 포트설정과 Ingress Controller의 모드설정 이었습니다. IngressController를 호스트 포트 모드로 설정하고 포트를 80,443으로 설정하여 로드밸런서 도입 전 임시적으로 문제를 해결했습니다.
 
 #### Cert-Manager HTTPS 인증서 발급 실패 문제
 - Cert-Manager의 TLS 인증서 자동 발급 실패 문제를 해결했습니다.
